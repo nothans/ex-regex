@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ex-regex"
+dynamic = ["version"]
+description = "Leave regex behind: find, replace, split, and extract text by what it means, with typed decisions from Jev."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Hans Scharler" }]
+keywords = ["regex", "jev", "typesafe", "system-one", "decision-model", "nlp", "redaction", "extraction", "classification", "grep"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Text Processing :: General",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/nothans/ex-regex"
+Issues = "https://github.com/nothans/ex-regex/issues"
+
+[project.scripts]
+exregex = "exregex.cli:main"
+exgrep = "exregex.cli:grep_main"
+
+[tool.hatch.version]
+path = "src/exregex/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/exregex"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/exregex", "/tests", "/examples", "/docs", "/scripts", "/evals/*.py", "/evals/*.md", "/evals/data/classics.jsonl", "/evals/data/classics_hard.jsonl", "/evals/data/contact.jsonl", "/evals/data/contact_holdout.jsonl", "/evals/data/refund.jsonl", "/evals/data/total.jsonl", "/evals/results/*.md", "/README.md", "/CHANGELOG.md", "/LICENSE", "/pyproject.toml"]
+exclude = ["/.meta", "**/.cache"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: calls a real backend; set EXREGEX_LIVE=1 and an API key"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003", "RUF022", "SIM108", "UP007", "UP045"]
+
+[tool.mypy]
+python_version = "3.10"
+strict_optional = true
+warn_unused_ignores = true
+
+[tool.ruff.lint.per-file-ignores]
+"evals/*" = ["E501"]  # question wordings read better unbroken

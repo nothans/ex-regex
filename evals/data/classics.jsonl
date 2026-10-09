@@ -1,0 +1,88 @@
+{"id": "cl000", "task": "scunthorpe", "text": "We drove through Scunthorpe on the way north.", "gold": false, "category": "scunthorpe"}
+{"id": "cl001", "task": "scunthorpe", "text": "The assassin was caught at the border.", "gold": false, "category": "scunthorpe"}
+{"id": "cl002", "task": "scunthorpe", "text": "She ordered a cocktail and a classic burger.", "gold": false, "category": "scunthorpe"}
+{"id": "cl003", "task": "scunthorpe", "text": "He grew up in Middlesex and moved to Essex.", "gold": false, "category": "scunthorpe"}
+{"id": "cl004", "task": "scunthorpe", "text": "My therapist recommended a long walk.", "gold": false, "category": "scunthorpe"}
+{"id": "cl005", "task": "scunthorpe", "text": "Charles Dickens wrote serialized novels.", "gold": false, "category": "scunthorpe"}
+{"id": "cl006", "task": "scunthorpe", "text": "Add shiitake mushrooms and a pinch of salt.", "gold": false, "category": "scunthorpe"}
+{"id": "cl007", "task": "scunthorpe", "text": "The cockpit door stayed locked.", "gold": false, "category": "scunthorpe"}
+{"id": "cl008", "task": "scunthorpe", "text": "Hello from the Shellharbour team!", "gold": false, "category": "scunthorpe"}
+{"id": "cl009", "task": "scunthorpe", "text": "Pass the grapes and the titanium spork.", "gold": false, "category": "scunthorpe"}
+{"id": "cl010", "task": "scunthorpe", "text": "The document was assessed and passed.", "gold": false, "category": "scunthorpe"}
+{"id": "cl011", "task": "scunthorpe", "text": "Matsushita built the first prototype.", "gold": false, "category": "scunthorpe"}
+{"id": "cl012", "task": "scunthorpe", "text": "This update is total crap.", "gold": true, "category": "scunthorpe"}
+{"id": "cl013", "task": "scunthorpe", "text": "Damn, the build broke again.", "gold": true, "category": "scunthorpe"}
+{"id": "cl014", "task": "scunthorpe", "text": "What the hell happened to the server?", "gold": true, "category": "scunthorpe"}
+{"id": "cl015", "task": "scunthorpe", "text": "Your support team is a bunch of asses.", "gold": true, "category": "scunthorpe"}
+{"id": "cl016", "task": "scunthorpe", "text": "Well, shit, I deleted the wrong folder.", "gold": true, "category": "scunthorpe"}
+{"id": "cl017", "task": "scunthorpe", "text": "That was a bloody stupid decision.", "gold": true, "category": "scunthorpe"}
+{"id": "cl018", "task": "sarcasm", "text": "Great, another outage during the demo.", "gold": false, "category": "sarcasm"}
+{"id": "cl019", "task": "sarcasm", "text": "Oh wonderful, the app logged me out again.", "gold": false, "category": "sarcasm"}
+{"id": "cl020", "task": "sarcasm", "text": "I just love waiting forty minutes on hold.", "gold": false, "category": "sarcasm"}
+{"id": "cl021", "task": "sarcasm", "text": "Awesome job losing my package twice.", "gold": false, "category": "sarcasm"}
+{"id": "cl022", "task": "sarcasm", "text": "Perfect, now the invoice is wrong too.", "gold": false, "category": "sarcasm"}
+{"id": "cl023", "task": "sarcasm", "text": "Fantastic, the update deleted my settings.", "gold": false, "category": "sarcasm"}
+{"id": "cl024", "task": "sarcasm", "text": "Not bad at all, it works better than I expected.", "gold": true, "category": "sarcasm"}
+{"id": "cl025", "task": "sarcasm", "text": "I can't complain, setup took five minutes.", "gold": true, "category": "sarcasm"}
+{"id": "cl026", "task": "sarcasm", "text": "Honestly the new dashboard is great.", "gold": true, "category": "sarcasm"}
+{"id": "cl027", "task": "sarcasm", "text": "Love the dark mode, thank you!", "gold": true, "category": "sarcasm"}
+{"id": "cl028", "task": "sarcasm", "text": "Couldn't be happier with the support I got.", "gold": true, "category": "sarcasm"}
+{"id": "cl029", "task": "sarcasm", "text": "No issues so far, it just works.", "gold": true, "category": "sarcasm"}
+{"id": "cl030", "task": "ipv4", "text": "192.168.1.1", "gold": true, "category": "ipv4"}
+{"id": "cl031", "task": "ipv4", "text": "10.0.0.255", "gold": true, "category": "ipv4"}
+{"id": "cl032", "task": "ipv4", "text": "255.255.255.255", "gold": true, "category": "ipv4"}
+{"id": "cl033", "task": "ipv4", "text": "0.0.0.0", "gold": true, "category": "ipv4"}
+{"id": "cl034", "task": "ipv4", "text": "172.16.254.3", "gold": true, "category": "ipv4"}
+{"id": "cl035", "task": "ipv4", "text": "8.8.4.4", "gold": true, "category": "ipv4"}
+{"id": "cl036", "task": "ipv4", "text": "256.1.1.1", "gold": false, "category": "ipv4"}
+{"id": "cl037", "task": "ipv4", "text": "192.168.1.300", "gold": false, "category": "ipv4"}
+{"id": "cl038", "task": "ipv4", "text": "999.999.999.999", "gold": false, "category": "ipv4"}
+{"id": "cl039", "task": "ipv4", "text": "10.0.0", "gold": false, "category": "ipv4"}
+{"id": "cl040", "task": "ipv4", "text": "1.2.3.4.5", "gold": false, "category": "ipv4"}
+{"id": "cl041", "task": "ipv4", "text": "01.02.03.004", "gold": false, "category": "ipv4"}
+{"id": "cl042", "task": "ipv4", "text": "192.168.01.1", "gold": false, "category": "ipv4"}
+{"id": "cl043", "task": "ipv4", "text": "127.0.0.1", "gold": true, "category": "ipv4"}
+{"id": "cl044", "task": "date", "text": "2024-02-29", "gold": true, "category": "date"}
+{"id": "cl045", "task": "date", "text": "2023-02-29", "gold": false, "category": "date"}
+{"id": "cl046", "task": "date", "text": "2026-04-31", "gold": false, "category": "date"}
+{"id": "cl047", "task": "date", "text": "2026-04-30", "gold": true, "category": "date"}
+{"id": "cl048", "task": "date", "text": "2026-13-01", "gold": false, "category": "date"}
+{"id": "cl049", "task": "date", "text": "2026-12-31", "gold": true, "category": "date"}
+{"id": "cl050", "task": "date", "text": "1900-02-29", "gold": false, "category": "date"}
+{"id": "cl051", "task": "date", "text": "2000-02-29", "gold": true, "category": "date"}
+{"id": "cl052", "task": "date", "text": "2026-06-31", "gold": false, "category": "date"}
+{"id": "cl053", "task": "date", "text": "2026-11-31", "gold": false, "category": "date"}
+{"id": "cl054", "task": "date", "text": "2025-02-28", "gold": true, "category": "date"}
+{"id": "cl055", "task": "date", "text": "2026-00-10", "gold": false, "category": "date"}
+{"id": "cl056", "task": "hex_color", "text": "#fff", "gold": true, "category": "hex_color"}
+{"id": "cl057", "task": "hex_color", "text": "#FFFFFF", "gold": true, "category": "hex_color"}
+{"id": "cl058", "task": "hex_color", "text": "#1a2b3c", "gold": true, "category": "hex_color"}
+{"id": "cl059", "task": "hex_color", "text": "#12345", "gold": false, "category": "hex_color"}
+{"id": "cl060", "task": "hex_color", "text": "#ggg", "gold": false, "category": "hex_color"}
+{"id": "cl061", "task": "hex_color", "text": "fff", "gold": false, "category": "hex_color"}
+{"id": "cl062", "task": "hex_color", "text": "#abcd", "gold": false, "category": "hex_color"}
+{"id": "cl063", "task": "hex_color", "text": "#00ff00", "gold": true, "category": "hex_color"}
+{"id": "cl064", "task": "hex_color", "text": "#0F0F0F0F", "gold": false, "category": "hex_color"}
+{"id": "cl065", "task": "hex_color", "text": "#xyz123", "gold": false, "category": "hex_color"}
+{"id": "cl066", "task": "balanced_parens", "text": "(a(b)c)", "gold": true, "category": "balanced_parens"}
+{"id": "cl067", "task": "balanced_parens", "text": "((a)", "gold": false, "category": "balanced_parens"}
+{"id": "cl068", "task": "balanced_parens", "text": ")(", "gold": false, "category": "balanced_parens"}
+{"id": "cl069", "task": "balanced_parens", "text": "()()", "gold": true, "category": "balanced_parens"}
+{"id": "cl070", "task": "balanced_parens", "text": "(()())", "gold": true, "category": "balanced_parens"}
+{"id": "cl071", "task": "balanced_parens", "text": "(a))(", "gold": false, "category": "balanced_parens"}
+{"id": "cl072", "task": "balanced_parens", "text": "((()))", "gold": true, "category": "balanced_parens"}
+{"id": "cl073", "task": "balanced_parens", "text": "(()", "gold": false, "category": "balanced_parens"}
+{"id": "cl074", "task": "balanced_parens", "text": "a(b)c(d(e)f)g", "gold": true, "category": "balanced_parens"}
+{"id": "cl075", "task": "balanced_parens", "text": "))((", "gold": false, "category": "balanced_parens"}
+{"id": "cl076", "task": "balanced_parens", "text": "(a)(b))", "gold": false, "category": "balanced_parens"}
+{"id": "cl077", "task": "balanced_parens", "text": "(((x)))", "gold": true, "category": "balanced_parens"}
+{"id": "cl078", "task": "palindrome", "text": "racecar", "gold": true, "category": "palindrome"}
+{"id": "cl079", "task": "palindrome", "text": "level", "gold": true, "category": "palindrome"}
+{"id": "cl080", "task": "palindrome", "text": "A man, a plan, a canal: Panama", "gold": true, "category": "palindrome"}
+{"id": "cl081", "task": "palindrome", "text": "Was it a car or a cat I saw?", "gold": true, "category": "palindrome"}
+{"id": "cl082", "task": "palindrome", "text": "hello", "gold": false, "category": "palindrome"}
+{"id": "cl083", "task": "palindrome", "text": "palindrome", "gold": false, "category": "palindrome"}
+{"id": "cl084", "task": "palindrome", "text": "Never odd or even", "gold": true, "category": "palindrome"}
+{"id": "cl085", "task": "palindrome", "text": "abcdcbx", "gold": false, "category": "palindrome"}
+{"id": "cl086", "task": "palindrome", "text": "Step on no pets", "gold": true, "category": "palindrome"}
+{"id": "cl087", "task": "palindrome", "text": "nearly a palindrome", "gold": false, "category": "palindrome"}

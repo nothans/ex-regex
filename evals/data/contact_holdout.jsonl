@@ -1,0 +1,12 @@
+{"id": "h01", "text": "Easiest is my personal inbox: fixture_quasar_7k9(at)example(dot)invalid.", "gold": ["fixture_quasar_7k9(at)example(dot)invalid"]}
+{"id": "h02", "text": "For bookings call the front desk at 617-555-0100, they answer around the clock.", "gold": []}
+{"id": "h03", "text": "WhatsApp me on +44 7700 900126 when you land in London.", "gold": ["+44 7700 900126"]}
+{"id": "h04", "text": "nebula.wombat.8p2@comet-labs.example.invalid owns the account, ask her before changing billing.", "gold": ["nebula.wombat.8p2@comet-labs.example.invalid"]}
+{"id": "h05", "text": "Escalations go to team-ops@comet-labs.example.invalid, which pages whoever is on call.", "gold": []}
+{"id": "h06", "text": "Her profile is profiles.example.invalid/in/nebula-wombat-8p2 if you want background.", "gold": [], "neutral": ["profiles.example.invalid/in/nebula-wombat-8p2"]}
+{"id": "h07", "text": "Conference room 555-1234 is booked for the offsite on 2026-11-12.", "gold": []}
+{"id": "h08", "text": "My Signal is +44 7700 900127; I don't use SMS much.", "gold": ["+44 7700 900127"]}
+{"id": "h09", "text": "The coupon code SAVE-555-0177 expires at midnight.", "gold": []}
+{"id": "h10", "text": "Leave a voicemail for Coach Quasar Marmot at 919-555-0136 if practice moves.", "gold": ["919-555-0136"]}
+{"id": "h11", "text": "Order status updates come from orders@shop.example.invalid and can't receive replies.", "gold": []}
+{"id": "h12", "text": "If you need the landlord, it's Mr. Nebula Wombat, zero seven seven zero zero, nine zero zero, one two eight.", "gold": ["zero seven seven zero zero, nine zero zero, one two eight"]}

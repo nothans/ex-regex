@@ -1,0 +1,77 @@
+name: Package checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Install build and static-check tools
+        run: python -m pip install 'build>=1.2,<2' 'twine>=7,<8' 'ruff>=0.12,<1' 'mypy>=1.10,<2'
+      - run: python -m ruff check src tests evals examples scripts
+      - run: python -m mypy src examples/support --check-untyped-defs
+      - name: Build sdist and then wheel from sdist
+        run: python -m build
+      - name: Validate exact artifact pair and release tag
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          if [ -n "$RELEASE_TAG" ]; then
+            python scripts/release.py check dist --tag "$RELEASE_TAG"
+          else
+            python scripts/release.py check dist
+          fi
+          python -m twine check dist/*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: distributions
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  installed-wheel:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ['3.10', '3.11', '3.12', '3.13']
+        include:
+          - os: windows-latest
+            python: '3.13'
+          - os: macos-latest
+            python: '3.13'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: distributions
+          path: dist/
+      - run: python -m pip install 'pytest>=9,<10'
+      - name: Test installed package with checkout sources absent
+        run: python scripts/release.py test dist

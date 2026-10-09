@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+release-dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+.env*
+.meta/
+evals/results/*.jsonl
+decisions.jsonl
+*.semantic-v1.jsonl
