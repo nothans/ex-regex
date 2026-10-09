@@ -4,9 +4,9 @@ The release workflow checks the distribution, runs the installed-wheel suite, an
 
 ## One-time setup
 
-The GitHub repository is `nothans/ex-regex`. Create GitHub environments named `testpypi` and `pypi`; restrict them to version tags and configure an approval rule for production publication where the repository plan supports it.
+The GitHub repository is `nothans/ex-regex`. Create a GitHub environment named `pypi` and restrict it to version tags (`v*`).
 
-Register a pending Trusted Publisher separately on [TestPyPI](https://test.pypi.org/manage/account/publishing/) and [PyPI](https://pypi.org/manage/account/publishing/):
+Register a pending Trusted Publisher on [PyPI](https://pypi.org/manage/account/publishing/):
 
 | Field | Value |
 |---|---|
@@ -14,15 +14,15 @@ Register a pending Trusted Publisher separately on [TestPyPI](https://test.pypi.
 | Owner | `nothans` |
 | Repository | `ex-regex` |
 | Workflow filename | `release.yml` |
-| Environment | `testpypi` on TestPyPI; `pypi` on PyPI |
+| Environment | `pypi` |
 
-Both services need their own account setup. GitHub authentication alone does not register these publishers. No long-lived API token is needed. A pending publisher does not reserve the package name. See the official [Trusted Publishing setup](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) and [first-publication guide](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/).
+GitHub authentication alone does not register the publisher on PyPI. No long-lived API token is needed. A pending publisher does not reserve the package name. See the official [Trusted Publishing setup](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) and [first-publication guide](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/).
 
 ## Prepare and check
 
 Use a fresh output directory with exactly one current wheel and sdist. Update `src/exregex/_version.py` and `CHANGELOG.md` for each new version; package indexes do not allow replacing an uploaded distribution with different bytes.
 
-For the first public upload, update the README's source-preview installation notice and verify that its GitHub documentation links are publicly accessible. Keep the checkout instructions available until the PyPI installation has been verified.
+Keep the README's installation instructions and public documentation links accurate for the release. Keep checkout instructions available for running the application examples.
 
 ```sh
 python -m pip install build 'twine>=7,<8' pytest ruff mypy
@@ -42,17 +42,18 @@ Twine 7 or newer is required for the metadata version emitted by current Hatchli
 
 1. Push the reviewed repository and let **Package checks** finish. The release workflow must exist on the default branch before manual dispatch is available.
 2. Create and push `v0.1.0a1` at the reviewed commit. Keep version tags immutable. A tag push alone does not publish.
-3. In Actions, run **Publish package**, selecting that tag and `testpypi`. Selecting a branch or a tag that differs from the package version fails before upload.
-4. Verify the TestPyPI installation in a fresh environment:
+3. In Actions, run **Publish package**, selecting that tag and `pypi`. The index selector defaults to `testpypi`, so explicitly choose `pypi`. Selecting a branch or a tag that differs from the package version fails before upload. Confirm any configured environment approval.
+4. Verify the PyPI installation in a fresh environment:
 
    ```sh
-   python -m pip install --index-url https://test.pypi.org/simple/ --no-deps ex-regex==0.1.0a1
+   python -m pip install --index-url https://pypi.org/simple/ --no-deps ex-regex==0.1.0a1
    python -c "import exregex; print(exregex.__version__)"
    exregex --help
    ```
 
-5. Run **Publish package** on the same immutable tag with `pypi`. This reruns the checks and builds a new tested pair from that tag; it does not promote the previously uploaded TestPyPI bytes. Confirm any configured environment approval.
-6. Verify with `python -m pip install --pre ex-regex` in another clean environment. Record the workflow run, tag, version and published artifact hashes.
+5. Verify the README command, `python -m pip install --pre ex-regex`, and record the workflow run, tag, version and published artifact hashes.
+
+TestPyPI is optional. For a rehearsal, create a `testpypi` GitHub environment and register a separate [TestPyPI Trusted Publisher](https://test.pypi.org/manage/account/publishing/) with the same values except environment `testpypi`. Run the workflow on the version tag with `testpypi`, then verify installation using `--index-url https://test.pypi.org/simple/`. A later PyPI run rebuilds and tests its own artifact pair from the same tag; it does not promote the TestPyPI bytes.
 
 Only the publishing job can request an OIDC token. It downloads the same-run tested artifacts and does not build code. Index URLs are fixed in the workflow. Duplicate/partial uploads fail visibly; there is no `skip-existing`. This follows [PyPA's build/publish separation](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/).
 

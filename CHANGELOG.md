@@ -1,6 +1,6 @@
 # Changes
 
-## 0.1.0a1 — unreleased
+## 0.1.0a1 — 2026-10-08
 
 Initial experimental release.
 

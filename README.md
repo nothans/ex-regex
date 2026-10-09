@@ -138,7 +138,13 @@ The prefilter is the pattern doing what it is best at, cheaply throwing away wha
 
 ## Install
 
-Python 3.10 or newer, no runtime dependencies. This alpha has **not been published to PyPI**. Install from a checkout for now; cloning the private repository requires GitHub access:
+Python 3.10 or newer, no runtime dependencies. Install the experimental alpha:
+
+```bash
+python -m pip install --pre ex-regex
+```
+
+The `--pre` flag allows pip to select the alpha. To run the offline application examples, install from a checkout:
 
 ```bash
 git clone https://github.com/nothans/ex-regex.git
@@ -162,8 +168,6 @@ $env:OPENROUTER_API_KEY = "sk-or-..."
 ```
 
 Use `TYPESAFE_API_KEY` for TypeSafe directly. The library reads keys from the environment; the command line also reads a `.env` file at or above the working directory. Live results can differ from the illustrative answers in this README.
-
-After the first PyPI release, installation will be `python -m pip install --pre ex-regex`. The `--pre` flag allows pip to select the experimental alpha.
 
 ## The API, next to `re`
 
