@@ -1,10 +1,17 @@
 # ex-regex
 
+![ex-regex: Match meaning in Python.](https://raw.githubusercontent.com/nothans/ex-regex/main/images/readme-banner.jpg)
+
+[![PyPI version](https://img.shields.io/pypi/v/ex-regex?color=e65338)](https://pypi.org/project/ex-regex/)
+[![Python versions](https://img.shields.io/pypi/pyversions/ex-regex?color=405866)](https://pypi.org/project/ex-regex/)
+[![Package checks](https://github.com/nothans/ex-regex/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nothans/ex-regex/actions/workflows/ci.yml)
+[![MIT license](https://img.shields.io/pypi/l/ex-regex?color=405866)](https://github.com/nothans/ex-regex/blob/main/LICENSE)
+
 **Leave regex behind. Find, replace, split, and extract text by what it means.**
 
 A Python library for using typed model decisions inside ordinary software. Use the familiar text API below, or compose predicates and record patterns through the [semantic programming API](https://github.com/nothans/ex-regex/blob/main/docs/semantic.md).
 
-[Install and try it offline](#install), including match, negative, uncertain, and failure outcomes without an API key. The text examples below make live calls and show illustrative outputs.
+[Get it on PyPI](https://pypi.org/project/ex-regex/) or [install and try it offline](#install), including match, negative, uncertain, and failure outcomes without an API key. The text examples below make live calls and show illustrative outputs.
 
 ```python
 import exregex as ex
