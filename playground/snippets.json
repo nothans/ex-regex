@@ -1,0 +1,26 @@
+[
+  {
+    "title": "A Pattern",
+    "code": "pat = ex.compile(\"asks for a refund\", unit=\"sentence\")\npat"
+  },
+  {
+    "title": "Scan with bands",
+    "code": "for m in ex.scan(\"the writer asks, now, to get money back\", \"The refund came through yesterday. Thanks for the quick help!\", engine=engine):\n    print(f\"{m.p:.2f}\", m.band, m.text)"
+  },
+  {
+    "title": "Units, free",
+    "code": "ex.find_units(\"Call 617-555-0143 or mail quasar at example dot invalid by 2026-10-09.\", (\"phone\", \"email\", \"date\"))"
+  },
+  {
+    "title": "Your own finder",
+    "code": "import re\nids = lambda text: [m.span() for m in re.finditer(r\"\\bA-\\d{3,}\\b\", text)]\nex.find_units(\"Orders A-1182 and A-1190 arrived.\", ids)"
+  },
+  {
+    "title": "Keyword stand-in",
+    "code": "from exregex.testing import keyword_engine\nkw = keyword_engine({\"refund\": [\"refund\", \"money back\"]}, concurrency=1)\nex.findall(\"asks for a refund\", \"I want my money back. Thanks!\", engine=kw)"
+  },
+  {
+    "title": "The engine",
+    "code": "engine.stats.as_dict()"
+  }
+]

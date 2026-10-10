@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ex-regex playground</title>
+<meta name="description" content="Try every feature of the ex-regex Python package in your browser: find, replace, split and extract text by what it means.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M12 5H6v22h6' fill='none' stroke='%23202932' stroke-width='4'/%3E%3Cpath d='M20 5h4c0 7-5 7-5 11s5 4 5 11h-4' fill='none' stroke='%23E65338' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --ink: #202932;
+  --ink-2: #4a5866;
+  --ink-3: #6b7885;
+  --ground: #eef1f4;
+  --surface: #f8fafb;
+  --raised: #ffffffee;
+  --line: #d5dce2;
+  --line-2: #c3ccd4;
+  --accent: #e65338;
+  --accent-ink: #b8361f;
+  --accent-soft: #fbe3dd;
+  --yes: #c7461f;
+  --yes-bg: #fadfd7;
+  --review: #9a6a06;
+  --review-bg: #f8ecc9;
+  --no: #5d6b78;
+  --no-bg: #e6eaee;
+  --ok: #2f7a4f;
+  --ok-bg: #dcefe3;
+  --bad: #a3342a;
+  --bad-bg: #f6dcd8;
+  --code-bg: #1d252d;
+  --code-ink: #e3e9ee;
+  --focus: #e65338;
+  --shadow: 0 6px 24px -12px #20293240;
+  --radius: 12px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e6ebef;
+    --ink-2: #b4bec7;
+    --ink-3: #8c98a3;
+    --ground: #151b21;
+    --surface: #1b232a;
+    --raised: #212a32;
+    --line: #2d3740;
+    --line-2: #3a4652;
+    --accent: #f06a4f;
+    --accent-ink: #ff8a70;
+    --accent-soft: #3b231e;
+    --yes: #ff8a70;
+    --yes-bg: #47271f;
+    --review: #e2b54e;
+    --review-bg: #3b3220;
+    --no: #9aa6b1;
+    --no-bg: #26303a;
+    --ok: #6fc995;
+    --ok-bg: #1d3528;
+    --bad: #f08a7e;
+    --bad-bg: #3f2421;
+    --code-bg: #10161b;
+    --code-ink: #dce4ea;
+    --shadow: 0 6px 24px -12px #00000080;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* ---- top bar ---- */
+.top {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 17px; letter-spacing: -0.01em; }
+.brand svg { width: 26px; height: 26px; }
+.brand small { font-weight: 500; color: var(--ink-3); font-size: 13px; }
+.top .spacer { flex: 1; }
+.engine-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--no-bg); color: var(--ink-2); font-size: 13px;
+  border: 0; cursor: pointer;
+}
+.engine-pill[data-mode="live"] { background: var(--accent-soft); color: var(--accent-ink); }
+.engine-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.top a.ext { font-size: 13px; color: var(--ink-2); text-decoration: none; }
+.top a.ext:hover { color: var(--ink); text-decoration: underline; }
+
+/* ---- layout ---- */
+.layout { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: calc(100vh - 53px); }
+nav.stations {
+  position: sticky; top: 53px; align-self: start;
+  max-height: calc(100vh - 53px); overflow: auto;
+  padding: 20px 12px 32px 16px;
+  border-right: 1px solid var(--line);
+}
+nav.stations h2 { font-size: 12px; font-weight: 600; color: var(--ink-3); margin: 18px 10px 6px; }
+nav.stations h2:first-child { margin-top: 0; }
+nav.stations button {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  width: 100%; text-align: left;
+  padding: 7px 10px; border: 0; border-radius: 8px;
+  background: transparent; cursor: pointer; color: var(--ink-2);
+}
+nav.stations button { white-space: nowrap; }
+nav.stations button code { font: 12px var(--mono); color: var(--ink-3); }
+nav.stations button:hover { background: var(--no-bg); color: var(--ink); }
+nav.stations button[aria-current="page"] { background: var(--raised); color: var(--ink); box-shadow: inset 3px 0 0 var(--accent); }
+main { padding: 28px 32px 64px; max-width: 1180px; width: 100%; }
+
+/* ---- station ---- */
+.station-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+.station-head h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -0.015em; }
+.station-head code { font: 14px var(--mono); color: var(--ink-3); }
+.lede { margin: 6px 0 20px; color: var(--ink-2); max-width: 70ch; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.presets button {
+  border: 1px solid var(--line-2); background: var(--surface);
+  border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: var(--ink-2);
+}
+.presets button:hover { border-color: var(--ink-3); color: var(--ink); }
+.presets button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+.workbench { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 1080px) { .workbench { grid-template-columns: minmax(0, 1fr); } }
+.panel {
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.field { display: grid; gap: 6px; margin-bottom: 14px; }
+.field > label, .field > .label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.field .hint { font-size: 12.5px; color: var(--ink-3); margin-top: -2px; }
+textarea, input[type="text"], input[type="password"], input[type="number"], select {
+  width: 100%; padding: 9px 11px; border-radius: 8px;
+  border: 1px solid var(--line-2); background: var(--surface);
+}
+textarea { resize: vertical; line-height: 1.5; }
+textarea.meaning { font-size: 15.5px; font-weight: 500; }
+textarea.code, input.code { font: 13.5px/1.5 var(--mono); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+details.more { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; }
+details.more summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 4px 0; }
+details.more[open] summary { margin-bottom: 10px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 8px; padding: 9px 16px; border: 1px solid var(--line-2);
+  background: var(--surface); cursor: pointer; font-weight: 600; font-size: 14px;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff8f6; }
+.btn.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn:disabled { opacity: 0.55; cursor: progress; }
+.btn.small { padding: 5px 10px; font-size: 13px; font-weight: 600; }
+.kbd { font: 12px var(--mono); color: var(--ink-3); }
+
+/* ---- results ---- */
+.result-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.result-head h2 { font-size: 15px; margin: 0; white-space: nowrap; }
+.result-head .source { text-align: right; }
+.source { font-size: 12.5px; color: var(--ink-3); }
+.source b { font-weight: 600; color: var(--ink-2); }
+.empty { color: var(--ink-3); font-size: 14px; }
+.skeleton { display: grid; gap: 10px; }
+.skeleton i { display: block; height: 14px; border-radius: 6px; background: var(--no-bg); }
+.skeleton i:nth-child(2) { width: 80%; } .skeleton i:nth-child(3) { width: 62%; }
+.reveal { animation: reveal 220ms var(--ease) both; }
+@keyframes reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .reveal { animation: none; } }
+
+.hl { white-space: pre-wrap; word-wrap: break-word; font-size: 15px; line-height: 1.9; }
+.hl .cand { border-bottom: 2px dotted var(--line-2); }
+.hl mark { color: inherit; border-radius: 4px; padding: 1px 2px; }
+.hl mark.yes { background: var(--yes-bg); box-shadow: inset 0 -2px 0 var(--yes); }
+.hl mark.review { background: var(--review-bg); box-shadow: inset 0 -2px 0 var(--review); }
+.hl mark.no { background: var(--no-bg); }
+.hl mark.pick { background: var(--yes-bg); box-shadow: inset 0 -2px 0 var(--yes); font-weight: 600; }
+.hl sup { font: 600 10.5px var(--mono); color: var(--ink-3); margin-left: 2px; vertical-align: 6px; }
+.hl mark.yes + sup, .hl mark.pick + sup { color: var(--yes); }
+.hl mark.review + sup { color: var(--review); }
+.unit-email { background: #dbe8f6; } .unit-phone { background: #e4dcf3; } .unit-url { background: #d9efe9; }
+.unit-handle { background: #f1e2d3; } .unit-money { background: #f7e0d9; } .unit-number { background: #e3e7eb; }
+.unit-percent { background: #e9f0d4; } .unit-date { background: #f5e8c7; } .unit-time { background: #f0dde8; }
+.unit-ipv4 { background: #dbe4f0; } .unit-name { background: #e7e0d8; } .unit-quote { background: #dde9df; }
+@media (prefers-color-scheme: dark) {
+  .unit-email { background: #22364a; } .unit-phone { background: #322a46; } .unit-url { background: #1f3b35; }
+  .unit-handle { background: #3e3021; } .unit-money { background: #45281f; } .unit-number { background: #2b343c; }
+  .unit-percent { background: #303920; } .unit-date { background: #3e3420; } .unit-time { background: #3d2633; }
+  .unit-ipv4 { background: #243245; } .unit-name { background: #36302a; } .unit-quote { background: #23352a; }
+}
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
+.legend span { padding: 2px 8px; border-radius: 999px; }
+.legend .chip-yes { background: var(--yes-bg); } .legend .chip-review { background: var(--review-bg); } .legend .chip-no { background: var(--no-bg); }
+.legend .chip-cand { border-bottom: 2px dotted var(--line-2); border-radius: 0; padding: 0 2px; }
+
+.verdict { display: grid; gap: 14px; }
+.verdict .big { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.verdict .big.yes { color: var(--yes); } .verdict .big.no { color: var(--no); } .verdict .big.review { color: var(--review); }
+.meter { position: relative; height: 34px; }
+.meter .track { position: absolute; inset: 12px 0 auto; height: 10px; border-radius: 6px; overflow: hidden; display: grid; grid-template-columns: 10% 80% 10%; }
+.meter .track i:nth-child(1) { background: var(--no-bg); } .meter .track i:nth-child(2) { background: var(--review-bg); } .meter .track i:nth-child(3) { background: var(--yes-bg); }
+.meter .needle { position: absolute; top: 4px; width: 4px; height: 26px; margin-left: -2px; border-radius: 2px; background: var(--ink); transition: left 250ms var(--ease); }
+.meter .thresh { position: absolute; top: 9px; height: 16px; border-left: 2px dashed var(--accent); }
+.meter-scale { display: flex; justify-content: space-between; font: 11.5px var(--mono); color: var(--ink-3); }
+.band-chip { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+.band-chip.yes, .band-chip.YES { background: var(--yes-bg); color: var(--yes); }
+.band-chip.review, .band-chip.UNKNOWN { background: var(--review-bg); color: var(--review); }
+.band-chip.no, .band-chip.NO { background: var(--no-bg); color: var(--no); }
+
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 56px; gap: 4px 12px; align-items: center; }
+.bar-row .label { font-size: 14px; }
+.bar-row .label.win { font-weight: 650; }
+.bar-row .val { font: 12.5px var(--mono); text-align: right; color: var(--ink-2); }
+.bar { grid-column: 1 / -1; height: 8px; border-radius: 5px; background: var(--no-bg); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 5px; background: var(--ink-3); transform-origin: left; animation: grow 300ms var(--ease) both; }
+.bar i.yes { background: var(--yes); } .bar i.review { background: var(--review); } .bar i.win { background: var(--accent); }
+@keyframes grow { from { transform: scaleX(0); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bar i { animation: none; } }
+
+.spans { display: grid; gap: 8px; }
+.span-row { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: start; padding: 8px 10px; border-radius: 8px; }
+.span-row.on { background: var(--yes-bg); }
+.span-row .p { font: 600 13px var(--mono); padding-top: 1px; }
+.span-row.on .p { color: var(--yes); }
+.span-row .minibar { height: 4px; border-radius: 3px; background: var(--no-bg); margin-top: 6px; overflow: hidden; }
+.span-row .minibar i { display: block; height: 100%; background: var(--ink-3); }
+.span-row.on .minibar i { background: var(--yes); }
+.thresh-control { display: grid; grid-template-columns: auto minmax(0, 1fr) 46px; gap: 12px; align-items: center; margin-bottom: 14px; font-size: 13.5px; }
+.thresh-control output { font: 600 13px var(--mono); }
+
+.pieces { display: grid; gap: 8px; }
+.piece { padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); white-space: pre-wrap; font-size: 14.5px; }
+.piece.match { background: var(--yes-bg); border-color: transparent; font-weight: 600; }
+.piece small { display: block; font: 11px var(--mono); color: var(--ink-3); margin-bottom: 2px; }
+
+.diff-line { display: grid; grid-template-columns: 22px 58px minmax(0, 1fr); gap: 8px; padding: 6px 10px; border-radius: 6px; font-size: 14px; }
+.diff-line.minus { background: var(--bad-bg); } .diff-line.plus { background: var(--ok-bg); }
+.diff-line b { font: 700 14px var(--mono); } .diff-line.minus b { color: var(--bad); } .diff-line.plus b { color: var(--ok); }
+.diff-line .p { font: 12.5px var(--mono); color: var(--ink-2); padding-top: 1px; }
+
+table.race { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.race th { text-align: left; font-size: 12.5px; color: var(--ink-3); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.race td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.race th:not(:first-child), table.race td:not(.case) { white-space: nowrap; }
+table.race td.case { font-family: var(--mono); font-size: 13.5px; }
+table.race tr { animation: reveal 220ms var(--ease) both; }
+.tick { font-weight: 700; } .tick.right { color: var(--ok); } .tick.wrong { color: var(--bad); }
+.score { display: flex; gap: 20px; margin-bottom: 14px; }
+.score div { flex: 1; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.score div.lead { border-color: var(--accent); }
+.score span { display: block; font-size: 12.5px; color: var(--ink-3); }
+.score strong { font-size: 26px; letter-spacing: -0.02em; }
+
+.records { display: grid; gap: 10px; }
+.record { display: grid; grid-template-columns: 80px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.record .id { font: 600 13px var(--mono); }
+.record .meta { font-size: 12.5px; color: var(--ink-3); }
+.record .text { font-size: 14px; }
+
+.notice { padding: 14px 16px; border-radius: 10px; background: var(--review-bg); color: var(--ink); font-size: 14px; }
+.notice.error { background: var(--bad-bg); }
+.notice p { margin: 0 0 10px; }
+.notice .actions { margin-top: 4px; }
+
+pre.code {
+  margin: 0; padding: 14px 16px; border-radius: 10px; overflow: auto;
+  background: var(--code-bg); color: var(--code-ink); font: 13px/1.6 var(--mono);
+}
+.code-head { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 8px; }
+.code-head h3 { margin: 0; font-size: 13px; color: var(--ink-2); }
+.tok-k { color: #f29b85; } .tok-s { color: #a8d5a2; } .tok-c { color: #8796a3; } .tok-n { color: #e8c37a; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.stat { padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.stat span { display: block; font-size: 12.5px; color: var(--ink-3); }
+.stat strong { font-size: 22px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.lock { display: grid; gap: 8px; max-height: 420px; overflow: auto; }
+.lock-line { padding: 8px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; }
+.lock-line code { font: 12px var(--mono); color: var(--ink-3); }
+.lock-line .ans { font: 600 12.5px var(--mono); color: var(--accent-ink); }
+.err-demo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.err-demo:last-child { border-bottom: 0; }
+.err-demo p { margin: 0; font-size: 14px; }
+.err-demo output { grid-column: 1 / -1; font: 12.5px var(--mono); color: var(--ink-2); white-space: pre-wrap; }
+.err-demo output:empty { display: none; }
+
+.console-out { min-height: 120px; max-height: 360px; overflow: auto; white-space: pre-wrap; }
+.boot { display: grid; gap: 10px; }
+.boot ol { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 14px; }
+.boot li.done { color: var(--ink-3); }
+.boot li.now { color: var(--ink); font-weight: 600; }
+.boot li.fail { color: var(--bad); font-weight: 600; }
+
+dialog {
+  border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(520px, calc(100vw - 32px));
+  background: var(--raised); color: var(--ink); box-shadow: var(--shadow);
+}
+dialog::backdrop { background: #10161b80; }
+dialog form { padding: 22px 24px; }
+dialog h2 { margin: 0 0 6px; font-size: 19px; }
+dialog p { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
+@media (max-width: 760px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  nav.stations { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line); display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px; }
+  nav.stations h2 { display: none; }
+  nav.stations button { width: auto; white-space: nowrap; }
+  nav.stations button code { display: none; }
+  main { padding: 20px 16px 48px; }
+  .top { padding: 10px 16px; gap: 10px; }
+  .top a.ext { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12 5H6v22h6" fill="none" stroke="currentColor" stroke-width="4"/><path d="M20 5h4c0 7-5 7-5 11s5 4 5 11h-4" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/></svg>
+    <span>ex-regex <small>playground</small></span>
+  </div>
+  <span class="spacer"></span>
+  <button class="engine-pill" id="engine-pill" type="button" data-mode="recorded" title="Where the answers come from">
+    <span class="dot"></span><span id="engine-label">Starting Python</span>
+  </button>
+  <a class="ext" href="https://pypi.org/project/ex-regex/" target="_blank" rel="noopener">PyPI</a>
+  <a class="ext" href="https://github.com/nothans/ex-regex" target="_blank" rel="noopener">GitHub</a>
+</header>
+<div class="layout">
+  <nav class="stations" id="nav" aria-label="Features"></nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<dialog id="key-dialog">
+  <form method="dialog" id="key-form">
+    <h2>Ask Jev live</h2>
+    <p>The built-in examples replay answers Jev already gave, so they cost nothing. To ask your own questions, add an OpenRouter key. It stays in this browser and is sent only to openrouter.ai, from here.</p>
+    <div class="field">
+      <label for="key-input">OpenRouter API key</label>
+      <input type="password" id="key-input" autocomplete="off" spellcheck="false" placeholder="sk-or-...">
+    </div>
+    <div class="field">
+      <label for="budget-input">Spending cap for this session, in US dollars</label>
+      <input type="number" id="budget-input" min="0.001" step="any" value="0.05">
+      <span class="hint">The engine refuses any request that would pass it. A typical question costs a few thousandths of a cent.</span>
+    </div>
+    <label class="check"><input type="checkbox" id="key-remember"> Remember the key on this device</label>
+    <div class="dialog-actions">
+      <button class="btn" value="clear" id="key-clear" type="submit">Use recorded answers only</button>
+      <button class="btn primary" value="save" type="submit">Use this key</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
+const PACKAGE = "ex-regex==__VERSION__";
+const PRESETS = __PRESETS_JSON__;
+const PLAYGROUND_PY = __PLAYGROUND_PY__;
+const DECISIONS = __DECISIONS__;
+const SEMANTIC_DECISIONS = __SEMANTIC_DECISIONS__;
+
+// ------------------------------------------------------------------ the Python side
+
+const GLUE_PY = String.raw`
+import json, sys, io, traceback
+import js
+import exregex as ex
+from exregex import backends
+from exregex.testing import keyword_engine
+import playground
+
+LOCK = "/home/pyodide/decisions.jsonl"
+URL = "https://openrouter.ai/api/alpha/decisions"
+MODEL = "typesafe/jev-1.13"
+
+
+class SystemOne(backends.SystemOne):
+    """The same backend ex.openrouter() returns, sending its request with the browser's
+    XMLHttpRequest from this worker. The class name, URL and model match the recording, so
+    recorded answers replay."""
+
+    def _send(self, data, headers):
+        x = js.XMLHttpRequest.new()
+        x.open("POST", self.url, False)
+        for name, value in headers.items():
+            if name.lower() == "user-agent":
+                continue
+            x.setRequestHeader(name, value)
+        try:
+            x.send(data.decode("utf-8"))
+        except Exception:
+            return None, "", None
+        status = int(x.status)
+        if status == 0:
+            return None, "", None
+        retry = x.getResponseHeader("retry-after")
+        return status, str(x.responseText), backends._retry_after(str(retry) if retry else None)
+
+
+def backend(key):
+    return SystemOne(URL, api_key=key, model=MODEL, name="openrouter", price_per_mtok=0.042)
+
+
+STATE = {"key": None, "budget": 0.05, "engine": None, "spent": 0.0, "requests": 0, "cached": 0}
+
+
+def engine():
+    if STATE["engine"] is None:
+        if STATE["key"]:
+            STATE["engine"] = ex.Engine(backend(STATE["key"]), cache=LOCK, concurrency=1, max_cost_usd=STATE["budget"])
+        else:
+            STATE["engine"] = ex.Engine(backend(None), cache=LOCK, replay=True, concurrency=1)
+    return STATE["engine"]
+
+
+def set_key(key, budget):
+    if STATE["engine"] is not None:
+        _bank(STATE["engine"])
+        STATE["engine"].close()
+    STATE["engine"] = None
+    STATE["key"] = key or None
+    STATE["budget"] = float(budget or 0.05)
+    engine()
+    return "live" if STATE["key"] else "recorded"
+
+
+def _bank(eng):
+    s = eng.stats.as_dict()
+    STATE["spent"] += s["cost_usd"]
+    STATE["requests"] += s["requests"]
+    STATE["cached"] += s["cached"]
+
+
+STOP = set("the a an and or of to in on at for with by from as is are was were be been it its this that these those your you our not no any into than then about which who what when where how does do did has have had can could would should will may might there their they them he she his her i me my we us".split())
+
+
+def stand_in(params):
+    source = " ".join(str(params.get(k, "")) for k in ("meaning", "what", "question"))
+    words = [w.strip(".,;:!?()\"'" + chr(96)).lower() for w in source.split()]
+    words = [w for w in words if len(w) > 2 and w not in STOP] or ["?"]
+    return keyword_engine({"": words}, concurrency=1)
+
+
+def call(station, params_json, standin=False):
+    params = json.loads(params_json)
+    eng = stand_in(params) if standin else engine()
+    before = eng.stats.as_dict()
+    try:
+        result = playground.run(station, params, eng)
+    except ex.CacheMiss:
+        return json.dumps({"status": "unrecorded"})
+    except Exception as e:
+        return json.dumps({"status": "error", "error": type(e).__name__, "message": str(e)})
+    after = eng.stats.as_dict()
+    requests = after["requests"] - before["requests"]
+    cached = after["cached"] - before["cached"]
+    if standin:
+        source = "standin"
+    elif requests:
+        source = "live"
+    elif cached:
+        source = "recorded"
+    else:
+        source = "none"
+    result.update(status="ok", source=source, requests=requests, cached=cached, cost=round(after["cost_usd"] - before["cost_usd"], 6))
+    return json.dumps(result, ensure_ascii=False)
+
+
+def stats():
+    eng = engine()
+    s = eng.stats.as_dict()
+    lines = []
+    try:
+        with open(LOCK, encoding="utf-8") as f:
+            lines = [json.loads(line) for line in f if line.strip()]
+    except FileNotFoundError:
+        pass
+    semantic = 0
+    try:
+        with open(LOCK.replace(".jsonl", ".semantic-v1.jsonl"), encoding="utf-8") as f:
+            semantic = sum(1 for line in f if line.strip())
+    except FileNotFoundError:
+        pass
+    return json.dumps({
+        "semantic": semantic,
+        "mode": "live" if STATE["key"] else "recorded",
+        "budget": STATE["budget"],
+        "requests": STATE["requests"] + s["requests"],
+        "cached": STATE["cached"] + s["cached"],
+        "retries": s["retries"],
+        "failures": s["failures"],
+        "input_tokens": s["input_tokens"],
+        "cost_usd": round(STATE["spent"] + s["cost_usd"], 6),
+        "latency": s["latency_ms"],
+        "decisions": [{"asked": d.get("asked", {}), "answers": d.get("answers", {}), "model": d.get("model", "")} for d in lines],
+    }, ensure_ascii=False)
+
+
+def lockfile():
+    try:
+        with open(LOCK, encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+
+def error_demo(kind):
+    try:
+        if kind == "budget":
+            tight = ex.Engine(backend("sk-or-not-a-real-key"), concurrency=1, max_cost_usd=0.0000001)
+            ex.test("asks for a refund", "Please refund my order.", engine=tight)
+            return "No error: the request was allowed."
+        if kind == "config":
+            ex.openrouter(api_key=None)
+            return "No error."
+        if kind == "cachemiss":
+            replay = ex.Engine(backend(None), cache=LOCK, replay=True, concurrency=1)
+            ex.test("is about penguins on holiday", "The penguins packed sunscreen.", engine=replay)
+            return "No error: that question happens to be recorded."
+        if kind == "limit":
+            ex.rate("A short note.", "How long is the note?", ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"], engine=engine())
+            return "No error."
+        if kind == "value":
+            ex.compile("asks for a refund", question="Is this a refund request?")
+            return "No error."
+    except Exception as e:
+        return f"{type(e).__name__}: {e}"
+    return "Unknown demo."
+
+
+CONSOLE = {"ex": ex, "json": json}
+
+
+def run_console(code):
+    import ast
+    CONSOLE["engine"] = engine()
+    out = io.StringIO()
+    old = sys.stdout, sys.stderr
+    sys.stdout = sys.stderr = out
+    shown = None
+    try:
+        tree = ast.parse(code, "<playground>", "exec")
+        last = tree.body[-1] if tree.body else None
+        if isinstance(last, ast.Expr):
+            tree.body.pop()
+            exec(compile(tree, "<playground>", "exec"), CONSOLE)
+            value = eval(compile(ast.Expression(last.value), "<playground>", "eval"), CONSOLE)
+            if value is not None:
+                shown = repr(value)
+        else:
+            exec(compile(tree, "<playground>", "exec"), CONSOLE)
+    except ex.CacheMiss:
+        print("This question is not in the recorded answers, so nothing was asked.")
+        print("Add an OpenRouter key (the pill at the top right) to ask Jev live,")
+        print("or pass engine=kw with a keyword stand-in (see that snippet).")
+    except Exception:
+        traceback.print_exc(limit=-3)
+    finally:
+        sys.stdout, sys.stderr = old
+    text = out.getvalue()
+    if shown is not None:
+        text += ("" if not text or text.endswith("\n") else "\n") + shown
+    return text
+`;
+
+const WORKER_SRC = `
+let py = null, ready = false;
+const queue = [];
+self.onmessage = (e) => (ready ? handle(e.data) : queue.push(e.data));
+const say = (step, extra) => self.postMessage({ boot: step, ...extra });
+async function handle(msg) {
+  try {
+    let data;
+    if (msg.op === "call") data = py.globals.get("call")(msg.station, JSON.stringify(msg.params), !!msg.standin);
+    else if (msg.op === "key") data = py.globals.get("set_key")(msg.key || "", msg.budget);
+    else if (msg.op === "stats") data = py.globals.get("stats")();
+    else if (msg.op === "lockfile") data = py.globals.get("lockfile")();
+    else if (msg.op === "error") data = py.globals.get("error_demo")(msg.kind);
+    else if (msg.op === "console") data = py.globals.get("run_console")(msg.code);
+    self.postMessage({ id: msg.id, ok: true, data });
+  } catch (err) {
+    self.postMessage({ id: msg.id, ok: false, error: String(err && err.message || err) });
+  }
+}
+(async () => {
+  const init = await new Promise((resolve) => {
+    const take = (m) => { if (m.op === "init") return resolve(m); };
+    const first = queue.findIndex((m) => m.op === "init");
+    if (first >= 0) return resolve(queue.splice(first, 1)[0]);
+    self.onmessage = (e) => (e.data.op === "init" ? take(e.data) : queue.push(e.data));
+  });
+  self.onmessage = (e) => (ready ? handle(e.data) : queue.push(e.data));
+  try {
+    say("python");
+    // A classic worker, because a page opened as a local file cannot start a module worker, and
+    // importScripts fails across origins there. pyodide.js is fetched and run in the worker's
+    // scope; Pyodide then loads the rest with import(), once importScripts is out of its way
+    // (it refuses to run where importScripts works).
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", init.pyodide + "pyodide.js", false);
+    xhr.send();
+    if (xhr.status !== 200) throw new Error("could not load pyodide.js (" + xhr.status + ")");
+    self.importScripts = () => { throw new TypeError("importScripts is not used here"); };
+    (0, eval)(xhr.responseText);
+    py = await self.loadPyodide({ indexURL: init.pyodide });
+    say("package");
+    await py.loadPackage("micropip");
+    await py.runPythonAsync("import micropip\\nawait micropip.install(" + JSON.stringify(init.package) + ")");
+    say("answers");
+    py.FS.writeFile("/home/pyodide/playground.py", init.playground);
+    py.FS.writeFile("/home/pyodide/decisions.jsonl", init.decisions);
+    py.FS.writeFile("/home/pyodide/decisions.semantic-v1.jsonl", init.semantic);
+    py.runPython("import sys\\nsys.path.insert(0, '/home/pyodide')");
+    py.runPython(init.glue);
+    const version = py.runPython("ex.__version__");
+    const pyVersion = py.runPython("import sys; sys.version.split()[0]");
+    ready = true;
+    say("ready", { version, pyVersion });
+    for (const m of queue.splice(0)) handle(m);
+  } catch (err) {
+    say("failed", { error: String(err && err.message || err) });
+  }
+})();
+`;
+
+const worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: "text/javascript" })));
+let nextId = 0;
+const pending = new Map();
+const boot = { step: "python", version: null, error: null, ready: false, listeners: [] };
+worker.onmessage = (e) => {
+  const m = e.data;
+  if (m.boot) {
+    boot.step = m.boot;
+    if (m.boot === "ready") { boot.ready = true; boot.version = m.version; boot.pyVersion = m.pyVersion; }
+    if (m.boot === "failed") boot.error = m.error;
+    boot.listeners.forEach((fn) => fn());
+    return;
+  }
+  const p = pending.get(m.id);
+  if (!p) return;
+  pending.delete(m.id);
+  m.ok ? p.resolve(m.data) : p.reject(new Error(m.error));
+};
+worker.onerror = (e) => { boot.error = e.message || "The Python worker stopped."; boot.listeners.forEach((fn) => fn()); };
+worker.postMessage({ op: "init", pyodide: PYODIDE, package: PACKAGE, playground: PLAYGROUND_PY, decisions: DECISIONS, semantic: SEMANTIC_DECISIONS, glue: GLUE_PY });
+function ask(op, payload = {}) {
+  return new Promise((resolve, reject) => {
+    const id = ++nextId;
+    pending.set(id, { resolve, reject });
+    worker.postMessage({ id, op, ...payload });
+  });
+}
+async function callStation(station, params, standin = false) {
+  return JSON.parse(await ask("call", { station, params, standin }));
+}
+
+// ------------------------------------------------------------------ helpers
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (p) => (p == null || Number.isNaN(p) ? "-" : Number(p).toFixed(2));
+const band = (p) => (p >= 0.9 ? "yes" : p <= 0.1 ? "no" : "review");
+const bandWord = { yes: "yes", review: "review", no: "no" };
+const money = (usd) => (usd === 0 ? "$0" : usd < 0.01 ? "$" + usd.toFixed(6) : "$" + usd.toFixed(4));
+
+function highlight(text, marks, candidates = []) {
+  // marks: [{start,end,cls,p}], candidates: [{start,end,cls}]; marks win over candidates.
+  const points = new Set([0, text.length]);
+  [...marks, ...candidates].forEach((m) => { points.add(m.start); points.add(m.end); });
+  const cuts = [...points].filter((x) => x >= 0 && x <= text.length).sort((a, b) => a - b);
+  let html = "";
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const a = cuts[i], b = cuts[i + 1];
+    const piece = esc(text.slice(a, b));
+    const mark = marks.find((m) => m.start <= a && m.end >= b);
+    const cand = candidates.find((m) => m.start <= a && m.end >= b);
+    let chunk = piece;
+    if (mark) chunk = `<mark class="${mark.cls}">${piece}</mark>`;
+    else if (cand) chunk = `<span class="${cand.cls || "cand"}">${piece}</span>`;
+    if (mark && mark.end === b && mark.p != null) chunk += `<sup>${fmt(mark.p)}</sup>`;
+    html += chunk;
+  }
+  return html;
+}
+
+function pyStr(s) {
+  const v = String(s ?? "");
+  if (v.includes("\n")) return '"""' + v.replace(/\\/g, "\\\\").replace(/"""/g, '\\"\\"\\"') + '"""';
+  return JSON.stringify(v);
+}
+function pyRaw(s) {
+  const v = String(s ?? "");
+  return /\\/.test(v) && !/'/.test(v) && !/\\$/.test(v) ? "r'" + v + "'" : JSON.stringify(v);
+}
+function pyUnit(p) {
+  if (p.finder) return "your_regex";
+  const u = p.unit || "sentence";
+  return Array.isArray(u) ? "(" + u.map((x) => JSON.stringify(x)).join(", ") + ")" : JSON.stringify(u);
+}
+function patternArgs(p, withUnit = true) {
+  const parts = [];
+  if (withUnit && (p.unit || p.finder) && !(p.unit === "sentence" && !p.finder)) parts.push("unit=" + pyUnit(p));
+  if (p.threshold != null && Number(p.threshold) !== 0.5) parts.push("threshold=" + Number(p.threshold));
+  if (p.context) parts.push("context=" + pyStr(p.context));
+  if (p.question) parts.push("question=" + pyStr(p.question));
+  if (p.prefilter) parts.push("prefilter=" + pyRaw(p.prefilter));
+  return parts;
+}
+function finderCode(p) {
+  if (!p.finder) return "";
+  return `import re\n\ndef your_regex(text):\n    # your pattern proposes the spans; the meaning decides\n    return [m.span() for m in re.finditer(${pyRaw(p.finder)}, text)]\n\n`;
+}
+function colorize(code) {
+  // One pass over the raw source, so a # or a digit inside a string stays part of the string.
+  const token = /([rf]?"(?:\\.|[^"\\\n])*"|[rf]?'(?:\\.|[^'\\\n])*')|(#[^\n]*)|\b(import|from|def|return|for|in|print|lambda|as|with|if|else|not|and|or)\b|\b(\d+(?:\.\d+)?)\b/g;
+  let out = "", last = 0;
+  for (const m of code.matchAll(token)) {
+    const kind = m[1] ? "tok-s" : m[2] ? "tok-c" : m[3] ? "tok-k" : "tok-n";
+    out += esc(code.slice(last, m.index)) + `<span class="${kind}">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(code.slice(last));
+}
+
+// ------------------------------------------------------------------ stations
+
+const UNITS = ["sentence", "line", "paragraph", "text", "email", "phone", "url", "handle", "contact", "money", "number", "percent", "date", "time", "ipv4", "name", "quote"];
+
+const fieldDefs = {
+  meaning: { label: "Meaning", kind: "meaning", hint: "Plain English. Name the boundary case in parentheses." },
+  text: { label: "Text", kind: "text", rows: 6 },
+  what: { label: "What to extract", kind: "meaning" },
+  unit: { label: "Unit", kind: "unit", hint: "What counts as a span. The finder proposes, the meaning decides." },
+  mode: { label: "Call", kind: "select", options: [["findall", "findall: every match"], ["search", "search: the best match"]] },
+  threshold: { label: "Threshold", kind: "range", more: true },
+  context: { label: "Context", kind: "line", more: true, hint: "A sentence about the text, sent with every question." },
+  question: { label: "Question wording", kind: "line", more: true, hint: "Your own question, with {ref} where the span goes." },
+  prefilter: { label: "Prefilter regex", kind: "line", code: true, more: true, hint: "A span must pass it before anyone is asked. Spans that fail cost nothing." },
+  finder: { label: "Finder regex", kind: "line", code: true, more: true, hint: "Use your own regex as the unit." },
+  repl: { label: "Replacement", kind: "line" },
+  repl_mode: { label: "Replace with", kind: "select", options: [["text", "the replacement text"], ["unit", "a label for each unit: f\"[{m.unit}]\""]] },
+  keep: { label: "Keep the matches as pieces", kind: "check" },
+  all: { label: "Every one (extractall)", kind: "check" },
+  options: { label: "Labels", kind: "options", hint: "One per line: label: description" },
+  question_rate: { label: "Question", kind: "line", key: "question", hint: "Refer to the text as `text`." },
+  levels: { label: "Levels, lowest first", kind: "lines", rows: 4 },
+  texts: { label: "Texts, one per line", kind: "lines", rows: 9 },
+  regex: { label: "Your regex", kind: "line", code: true },
+};
+
+const STATIONS = [
+  { id: "test", group: "Match", name: "Test", fn: "ex.test",
+    lede: "Is this text about that? One verdict with a probability, truthy above the threshold. Like re.fullmatch, but for meaning.",
+    fields: ["meaning", "text", "threshold", "context", "question"] },
+  { id: "find", group: "Match", name: "Find", fn: "ex.findall",
+    lede: "A unit proposes candidate spans and Jev judges each one. Every match is a verbatim slice of your text with its offsets, so a result can be wrong but never invented.",
+    fields: ["meaning", "text", "unit", "mode", "threshold", "context", "prefilter", "finder"] },
+  { id: "scan", group: "Match", name: "Scan", fn: "ex.scan",
+    lede: "Every span with its probability, matching or not. Slide the threshold: the answers are already in, so nothing is asked again.",
+    fields: ["meaning", "text", "unit", "context"] },
+  { id: "sub", group: "Match", name: "Replace", fn: "ex.sub",
+    lede: "Swap what a span means, not what it looks like. The replacement can be text or a function of the match.",
+    fields: ["meaning", "text", "unit", "repl_mode", "repl", "threshold"] },
+  { id: "split", group: "Match", name: "Split", fn: "ex.split",
+    lede: "Cut a text wherever a span fits the meaning, like re.split. Keep the matches to see where it cut.",
+    fields: ["meaning", "text", "unit", "keep"] },
+  { id: "extract", group: "Match", name: "Extract", fn: "ex.extract",
+    lede: "One choice among the candidates a unit finds, plus none of these. Jev can only pick a span that is in the text, so it cannot transpose a digit.",
+    fields: ["what", "text", "unit", "all", "context"] },
+  { id: "classify", group: "Decide", name: "Classify", fn: "ex.classify",
+    lede: "Pick one label, with every label's probability.",
+    fields: ["text", "options"] },
+  { id: "rate", group: "Decide", name: "Rate", fn: "ex.rate",
+    lede: "Place a text on an ordered scale of 2 to 10 levels. The score is probability-weighted, so it can sit between levels.",
+    fields: ["text", "question_rate", "levels"] },
+  { id: "many", group: "Decide", name: "Filter and rank", fn: "ex.rank",
+    lede: "Judge many texts in packed requests. Rank them by probability and keep the ones above the threshold.",
+    fields: ["meaning", "texts", "threshold"] },
+  { id: "diff", group: "Trust", name: "Diff your regex", fn: "ex.diff",
+    lede: "Run the regex you have and a meaning over the same text, and see only where they disagree. Nothing to label: read the disagreements and decide who was right.",
+    fields: ["meaning", "regex", "text", "unit"] },
+  { id: "classic", group: "Trust", name: "Classics", fn: "regex vs meaning", nav: "re vs ex",
+    lede: "Famous problems, asked both ways. Meaning wins on meaning, the pattern wins on syntax, and counting belongs in code." ,
+    fields: ["meaning"] },
+  { id: "semantic", group: "Trust", name: "Semantic programs", fn: "exregex.semantic", nav: ".semantic",
+    lede: "Compose a model predicate with exact field guards and an explicit band. A guard that fails decides without asking, and uncertainty stays UNKNOWN instead of becoming a yes.",
+    fields: [] },
+  { id: "units", group: "Under the hood", name: "Units", fn: "ex.find_units",
+    lede: "What each unit proposes, with no model calls and no cost. Type and watch the finders work: they over-collect on purpose, because the meaning decides.",
+    fields: ["text", "unit"] },
+  { id: "engine", group: "Under the hood", name: "Engine and lockfile", fn: "ex.Engine",
+    lede: "Every decision this page uses, as a lockfile you can read, diff and replay. Plus the typed errors, which you can trigger here without a key." },
+  { id: "console", group: "Under the hood", name: "Python", fn: "import exregex", nav: "console",
+    lede: "A real Python prompt in your browser, with ex imported and the playground's engine as engine. Recorded answers replay; with a key, new questions go to Jev." },
+];
+
+const state = { station: "test", params: {}, preset: {}, results: {} };
+
+function defaultParams(id) {
+  const first = PRESETS[id] && PRESETS[id][0];
+  return first ? structuredClone(first.params) : {};
+}
+
+// ------------------------------------------------------------------ rendering: nav
+
+function renderNav() {
+  const groups = [...new Set(STATIONS.map((s) => s.group))];
+  $("#nav").innerHTML = groups.map((g) => `<h2>${esc(g)}</h2>` + STATIONS.filter((s) => s.group === g).map((s) =>
+    `<button type="button" data-station="${s.id}" ${s.id === state.station ? 'aria-current="page"' : ""}>${esc(s.name)}<code>${esc(s.nav || (s.fn.startsWith("ex.") ? s.fn.slice(2) : s.fn))}</code></button>`).join("")).join("");
+}
+$("#nav").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-station]");
+  if (!b) return;
+  go(b.dataset.station);
+});
+function go(id) {
+  state.station = id;
+  history.replaceState(null, "", "#" + id);
+  renderNav();
+  renderStation();
+  $("#main").focus({ preventScroll: true });
+  window.scrollTo({ top: 0 });
+  // Recorded examples cost nothing, so a station shows its first answer on arrival.
+  if (boot.ready && !state.results[id] && !["engine", "console"].includes(id)) run();
+}
+
+// ------------------------------------------------------------------ rendering: a station
+
+function renderStation() {
+  const s = STATIONS.find((x) => x.id === state.station);
+  if (!state.params[s.id]) state.params[s.id] = defaultParams(s.id);
+  if (state.preset[s.id] == null) state.preset[s.id] = 0;
+  const main = $("#main");
+  const presets = PRESETS[s.id] || [];
+  let html = `<div class="station-head"><h1>${esc(s.name)}</h1><code>${esc(s.fn)}</code></div><p class="lede">${esc(s.lede)}</p>`;
+  if (presets.length) html += `<div class="presets" role="group" aria-label="Examples">${presets.map((p, i) => `<button type="button" data-preset="${i}" aria-pressed="${state.preset[s.id] === i}">${esc(p.title)}</button>`).join("")}</div>`;
+  if (s.id === "engine") { main.innerHTML = html + `<div id="engine-view"></div>`; renderEngine(); return; }
+  if (s.id === "console") { main.innerHTML = html + consoleView(); bindConsole(); return; }
+  if (s.id === "semantic") { main.innerHTML = html + `<div class="workbench"><div class="panel">${semanticForm()}</div><div class="panel" id="result"></div></div><div id="code"></div>`; bindSemantic(); showResult(); return; }
+  html += `<div class="workbench"><form class="panel" id="form" autocomplete="off">${formFields(s)}<div class="actions"><button class="btn primary" id="run" type="submit">${s.id === "units" ? "Find units" : "Ask"}</button><span class="kbd">Ctrl+Enter</span></div></form><div class="panel" id="result" aria-live="polite"></div></div><div id="code"></div>`;
+  main.innerHTML = html;
+  bindForm(s);
+  showResult();
+}
+
+$("#main").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-preset]");
+  if (!b) return;
+  const id = state.station;
+  state.preset[id] = Number(b.dataset.preset);
+  state.params[id] = structuredClone(PRESETS[id][state.preset[id]].params);
+  delete state.results[id];
+  renderStation();
+  run();
+});
+
+function formFields(s) {
+  const p = state.params[s.id];
+  const main = [], more = [];
+  for (const name of s.fields) {
+    const def = fieldDefs[name];
+    if (!def) continue;
+    if (s.id === "classic" && name === "meaning") { main.push(classicFields(p)); continue; }
+    if (name === "repl" && p.repl_mode === "unit") continue;
+    (def.more ? more : main).push(fieldHtml(name, def, p));
+  }
+  return main.join("") + (more.length ? `<details class="more" ${more.some((h) => h.includes('data-set="1"')) ? "open" : ""}><summary>More options</summary>${more.join("")}</details>` : "");
+}
+
+function fieldHtml(name, def, p) {
+  const key = def.key || name;
+  const value = p[key];
+  const set = value != null && value !== "" && !(key === "threshold" && Number(value) === 0.5) ? ' data-set="1"' : "";
+  const id = "f-" + name;
+  const hint = def.hint ? `<span class="hint">${esc(def.hint)}</span>` : "";
+  switch (def.kind) {
+    case "meaning":
+      return `<div class="field"${set}><label for="${id}">${def.label}</label><textarea class="meaning" id="${id}" data-key="${key}" rows="2" spellcheck="true">${esc(value)}</textarea>${hint}</div>`;
+    case "text":
+      return `<div class="field"${set}><label for="${id}">${def.label}</label><textarea id="${id}" data-key="${key}" rows="${def.rows || 5}">${esc(value)}</textarea>${hint}</div>`;
+    case "lines": {
+      const v = Array.isArray(value) ? value.join("\n") : value || "";
+      return `<div class="field"${set}><label for="${id}">${def.label}</label><textarea id="${id}" data-key="${key}" data-lines="1" rows="${def.rows || 5}">${esc(v)}</textarea>${hint}</div>`;
+    }
+    case "line":
+      return `<div class="field"${set}><label for="${id}">${def.label}</label><input type="text" class="${def.code ? "code" : ""}" id="${id}" data-key="${key}" value="${esc(value)}" spellcheck="false">${hint}</div>`;
+    case "unit": {
+      const multi = Array.isArray(value);
+      const opts = UNITS.map((u) => `<option value="${u}" ${(multi ? value.includes(u) : (value || "sentence") === u) ? "selected" : ""}>${u}</option>`).join("");
+      return `<div class="field"${set}><label for="${id}">${def.label}</label><select id="${id}" data-key="unit" ${multi ? 'multiple size="6"' : ""}>${opts}</select>${hint}${state.station === "units" ? `<label class="check"><input type="checkbox" id="unit-multi" ${multi ? "checked" : ""}> Several units at once (a tuple)</label>` : ""}</div>`;
+    }
+    case "select":
+      return `<div class="field"><label for="${id}">${def.label}</label><select id="${id}" data-key="${key}">${def.options.map(([v, l]) => `<option value="${v}" ${String(value ?? def.options[0][0]) === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></div>`;
+    case "check":
+      return `<label class="check field"><input type="checkbox" id="${id}" data-key="${key}" ${value ? "checked" : ""}> ${def.label}</label>`;
+    case "range": {
+      const v = value ?? 0.5;
+      return `<div class="field"${set}><label for="${id}">${def.label} <output id="${id}-out">${Number(v).toFixed(2)}</output></label><input type="range" id="${id}" data-key="${key}" min="0" max="1" step="0.01" value="${v}"></div>`;
+    }
+    case "options": {
+      const v = (value || []).map((o) => (o.description ? `${o.label}: ${o.description}` : o.label)).join("\n");
+      return `<div class="field"><label for="${id}">${def.label}</label><textarea id="${id}" data-key="options" rows="5">${esc(v)}</textarea>${hint}</div>`;
+    }
+  }
+  return "";
+}
+
+function classicFields(p) {
+  const cases = (p.cases || []).map((c) => `${c.text} | ${c.truth ? "yes" : "no"}`).join("\n");
+  return `<div class="field"><label for="f-meaning">Meaning</label><textarea class="meaning" id="f-meaning" data-key="meaning" rows="2">${esc(p.meaning)}</textarea></div>
+  <div class="field"><label for="f-regex">The regex it races</label><input type="text" class="code" id="f-regex" data-key="regex" value="${esc(p.regex)}" spellcheck="false"><span class="hint">${p.regex_mode === "search" ? "Searched anywhere in the case" : "Must match the whole case"}${p.regex_means === "reject" ? ", and a hit means the answer is no" : ""}.</span></div>
+  <div class="field"><label for="f-cases">Cases, one per line: text | right answer</label><textarea class="code" id="f-cases" data-key="cases" rows="7">${esc(cases)}</textarea></div>`;
+}
+
+function readForm(s) {
+  const p = state.params[s.id];
+  for (const el of $("#form").querySelectorAll("[data-key]")) {
+    const key = el.dataset.key;
+    if (key === "cases") {
+      p.cases = el.value.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+        const at = l.lastIndexOf("|");
+        const text = at >= 0 ? l.slice(0, at).trim() : l;
+        const truth = at >= 0 ? /^(y|yes|true|1)$/i.test(l.slice(at + 1).trim()) : false;
+        return { text, truth };
+      });
+    } else if (key === "options") {
+      p.options = el.value.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+        const at = l.indexOf(":");
+        return at > 0 ? { label: l.slice(0, at).trim(), description: l.slice(at + 1).trim() } : { label: l };
+      });
+    } else if (el.dataset.lines) {
+      p[key] = el.value.split("\n").map((l) => l.trim()).filter(Boolean);
+    } else if (el.type === "checkbox") {
+      p[key] = el.checked;
+    } else if (el.type === "range") {
+      p[key] = Number(el.value);
+    } else if (el.tagName === "SELECT" && el.multiple) {
+      p[key] = [...el.selectedOptions].map((o) => o.value);
+    } else {
+      p[key] = el.value;
+      if (el.value === "" && ["context", "question", "prefilter", "finder"].includes(key)) delete p[key];
+    }
+  }
+  return p;
+}
+
+function bindForm(s) {
+  const form = $("#form");
+  form.addEventListener("submit", (e) => { e.preventDefault(); run(); });
+  form.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); } });
+  form.addEventListener("input", (e) => {
+    if (e.target.type === "range") $("#" + e.target.id + "-out").textContent = Number(e.target.value).toFixed(2);
+    readForm(s);
+    markEdited();
+    renderCode();
+    if (s.id === "units") { clearTimeout(form._t); form._t = setTimeout(run, 140); }
+  });
+  form.addEventListener("change", (e) => {
+    if (e.target.id === "unit-multi") {
+      const p = state.params[s.id];
+      p.unit = e.target.checked ? [].concat(p.unit || "contact") : (Array.isArray(p.unit) ? p.unit[0] : p.unit) || "contact";
+      renderStation(); run(); return;
+    }
+    if (e.target.dataset.key === "repl_mode") { readForm(s); renderStation(); return; }
+    if (s.id === "units") run();
+  });
+  renderCode();
+}
+
+function markEdited() {
+  const id = state.station;
+  const presets = PRESETS[id] || [];
+  const same = presets.findIndex((pr) => JSON.stringify(pr.params) === JSON.stringify(state.params[id]));
+  state.preset[id] = same;
+  document.querySelectorAll("[data-preset]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.preset) === same)));
+}
+
+// ------------------------------------------------------------------ running
+
+async function run(standin = false) {
+  const id = state.station;
+  const s = STATIONS.find((x) => x.id === id);
+  if ($("#form")) readForm(s);
+  const params = structuredClone(state.params[id]);
+  const result = $("#result");
+  if (!result) return;
+  if (!boot.ready) {
+    state.queued = id;
+    result.innerHTML = bootView();
+    return;
+  }
+  const button = $("#run");
+  if (button) button.disabled = true;
+  if (id !== "units") result.innerHTML = `<div class="result-head"><h2>Asking</h2></div><div class="skeleton"><i></i><i></i><i></i></div>`;
+  try {
+    const out = await callStation(id, params, standin);
+    out.params = params;
+    state.results[id] = out;
+  } catch (err) {
+    state.results[id] = { status: "error", error: "PlaygroundError", message: err.message, params };
+  } finally {
+    if (button) button.disabled = false;
+  }
+  if (state.station === id) showResult();
+  refreshEnginePill();
+}
+
+function sourceLine(r) {
+  if (r.source === "recorded") return `<span class="source"><b>Recorded Jev answer</b>, replayed from the lockfile. ${r.cached} decision${r.cached === 1 ? "" : "s"}, no request.</span>`;
+  if (r.source === "live") return `<span class="source"><b>Live Jev</b>. ${r.requests} request${r.requests === 1 ? "" : "s"}, ${money(r.cost)}.</span>`;
+  if (r.source === "standin") return `<span class="source"><b>Keyword stand-in</b>. It looks for words from your meaning; it does not read.</span>`;
+  return `<span class="source"><b>No model call</b>. ${r.ms != null ? r.ms + " ms" : ""}</span>`;
+}
+
+function showResult() {
+  const id = state.station;
+  const result = $("#result");
+  if (!result) return;
+  const r = state.results[id];
+  if (!boot.ready) { result.innerHTML = bootView(); return; }
+  if (!r) { result.innerHTML = `<div class="result-head"><h2>Result</h2></div><p class="empty">Pick an example or write your own, then ask.</p>`; return; }
+  if (r.status === "unrecorded") {
+    result.innerHTML = `<div class="result-head"><h2>Not in the recorded answers</h2></div><div class="notice"><p>The built-in examples replay answers Jev already gave. This question is new, so it needs a live call.</p><div class="actions"><button class="btn primary small" type="button" data-act="key">Add an OpenRouter key</button><button class="btn small" type="button" data-act="standin">Try the keyword stand-in</button></div></div>`;
+    return;
+  }
+  if (r.status === "error") {
+    result.innerHTML = `<div class="result-head"><h2>${esc(r.error)}</h2></div><div class="notice error"><p>${esc(r.message)}</p></div>`;
+    return;
+  }
+  const head = (title) => `<div class="result-head"><h2>${title}</h2>${sourceLine(r)}</div>`;
+  const view = RENDER[id] ? RENDER[id](r, head) : `<pre class="code">${esc(JSON.stringify(r, null, 2))}</pre>`;
+  result.innerHTML = `<div class="reveal">${view}</div>`;
+  if (id === "scan") bindScan(r);
+}
+
+$("#main").addEventListener("click", (e) => {
+  const act = e.target.closest("[data-act]");
+  if (!act) return;
+  if (act.dataset.act === "key") openKey();
+  if (act.dataset.act === "standin") run(true);
+});
+
+function meter(p, threshold = 0.5) {
+  return `<div><div class="meter" aria-hidden="true"><div class="track"><i></i><i></i><i></i></div><div class="thresh" style="left:${threshold * 100}%"></div><div class="needle" style="left:${p * 100}%"></div></div><div class="meter-scale"><span>0 no</span><span>review</span><span>yes 1</span></div></div>`;
+}
+
+const RENDER = {
+  test(r, head) {
+    const b = r.band;
+    return head("Verdict") + `<div class="verdict"><div class="big ${b}">${r.match ? "Match" : "No match"}</div><div>p = <b>${fmt(r.p)}</b> &nbsp;<span class="band-chip ${b}">${bandWord[b]}</span> &nbsp;<span class="source">truthy at p ≥ ${fmt(r.threshold)}</span></div>${meter(r.p, r.threshold)}<p class="source">${b === "review" ? "Review band: between 0.1 and 0.9, Jev is unsure. That is the part worth a human look." : `Band ${bandWord[b]}: Jev is sure (yes at 0.9 and up, no at 0.1 and down). Between them is the review band.`}</p></div>`;
+  },
+  find(r, head) {
+    const p = r.params;
+    const marks = r.matches.map((m) => ({ ...m, cls: m.band }));
+    const cands = (r.candidates || []).map((c) => ({ ...c, cls: "cand" }));
+    const title = p.mode === "search" ? (r.matches.length ? "Best match" : "No match") : `${r.matches.length} match${r.matches.length === 1 ? "" : "es"} among ${cands.length} candidate${cands.length === 1 ? "" : "s"}`;
+    return head(title) + `<div class="hl">${highlight(p.text, marks, cands)}</div>` + legend(true);
+  },
+  scan(r, head) {
+    return head(`${r.spans.length} spans`) + `<div class="thresh-control"><label for="scan-t">Threshold</label><input type="range" id="scan-t" min="0" max="1" step="0.01" value="${r.params.threshold ?? 0.5}"><output id="scan-t-out"></output></div><div class="spans" id="scan-rows"></div>`;
+  },
+  sub(r, head) {
+    const p = r.params;
+    const marks = r.matches.map((m) => ({ ...m, cls: m.band }));
+    return head(`${r.count} replaced`) + `<div class="field"><span class="label">Before</span><div class="hl">${highlight(p.text, marks)}</div></div><div class="field"><span class="label">After</span><div class="hl">${esc(r.text)}</div></div>`;
+  },
+  split(r, head) {
+    const matched = new Set(r.matches.map((m) => m.text));
+    return head(`${r.pieces.length} pieces`) + `<div class="pieces">${r.pieces.map((piece, i) => `<div class="piece ${matched.has(piece) ? "match" : ""}"><small>[${i}]${matched.has(piece) ? " match" : ""}</small>${esc(piece)}</div>`).join("")}</div>`;
+  },
+  extract(r, head) {
+    const p = r.params;
+    const marks = r.matches.map((m) => ({ ...m, cls: "pick" }));
+    const cands = (r.candidates || []).map((c) => ({ ...c, cls: "cand" }));
+    const title = r.matches.length ? (p.all ? `${r.matches.length} found` : `Picked ${esc(r.matches[0].text)}`) : "None of these";
+    return head(title) + `<div class="hl">${highlight(p.text, marks, cands)}</div><p class="source">${cands.length} candidate${cands.length === 1 ? "" : "s"} found by the unit; Jev chose ${p.all ? "every one that fits" : "one, or none of these"}.</p>`;
+  },
+  units(r, head) {
+    const p = r.params;
+    const counts = {};
+    r.spans.forEach((s) => (counts[s.unit] = (counts[s.unit] || 0) + 1));
+    const marks = r.spans.map((s) => ({ ...s, cls: "unit-" + s.unit }));
+    return head(`${r.spans.length} span${r.spans.length === 1 ? "" : "s"}`) + `<div class="hl">${highlight(p.text, marks)}</div><div class="legend">${Object.entries(counts).map(([u, n]) => `<span class="unit-${u}">${u} ${n}</span>`).join("")}</div>`;
+  },
+  classify(r, head) {
+    const entries = Object.entries(r.probabilities).sort((a, b) => b[1] - a[1]);
+    return head(esc(r.label)) + `<div class="bars">${entries.map(([label, p]) => `<div class="bar-row"><span class="label ${label === r.label ? "win" : ""}">${esc(label)}</span><span class="val">${fmt(p)}</span><div class="bar"><i class="${label === r.label ? "win" : ""}" style="width:${p * 100}%"></i></div></div>`).join("")}</div>`;
+  },
+  rate(r, head) {
+    const levels = r.params.levels;
+    return head(`${esc(r.label)} <span class="source">score ${fmt(r.score)}</span>`) + `<div class="bars">${levels.map((l, i) => { const p = r.probabilities[String(i)] || 0; return `<div class="bar-row"><span class="label ${i === r.level ? "win" : ""}">${i}. ${esc(l)}</span><span class="val">${fmt(p)}</span><div class="bar"><i class="${i === r.level ? "win" : ""}" style="width:${p * 100}%"></i></div></div>`; }).join("")}</div>${meterScore(r.score, levels.length)}`;
+  },
+  many(r, head) {
+    const kept = r.ranked.filter((x) => x.kept).length;
+    return head(`${kept} of ${r.ranked.length} kept`) + `<div class="bars">${r.ranked.map((x) => `<div class="bar-row"><span class="label ${x.kept ? "win" : ""}">${x.kept ? "✓ " : ""}${esc(x.text)}</span><span class="val">${fmt(x.p)}</span><div class="bar"><i class="${band(x.p)}" style="width:${x.p * 100}%"></i></div></div>`).join("")}</div>`;
+  },
+  diff(r, head) {
+    const rows = [...r.regex_only.map((m) => ({ ...m, sign: "-" })), ...r.meaning_only.map((m) => ({ ...m, sign: "+" }))].sort((a, b) => a.start - b.start);
+    const title = r.clean ? "They agree everywhere" : `agree ${r.agree}, regex only ${r.regex_only.length}, meaning only ${r.meaning_only.length}`;
+    return head(esc(title)) + (rows.length ? `<div class="pieces">${rows.map((m) => `<div class="diff-line ${m.sign === "-" ? "minus" : "plus"}"><b>${m.sign}</b><span class="p">p=${fmt(m.p)}</span><span>${esc(m.text)}</span></div>`).join("")}</div>` : "") + `<div class="legend"><span><b>-</b> your regex matched, the meaning did not: a likely false positive</span><span><b>+</b> the meaning matched, your regex missed it</span></div>`;
+  },
+  classic(r, head) {
+    const regexLead = r.regex_right > r.meaning_right, meaningLead = r.meaning_right > r.regex_right;
+    return head("Regex vs meaning") + `<div class="score"><div class="${regexLead ? "lead" : ""}"><span>Regex</span><strong>${r.regex_right}/${r.total}</strong></div><div class="${meaningLead ? "lead" : ""}"><span>Meaning</span><strong>${r.meaning_right}/${r.total}</strong></div></div><table class="race"><thead><tr><th>Case</th><th>Right answer</th><th>Regex</th><th>Meaning</th></tr></thead><tbody>${r.rows.map((x, i) => `<tr style="animation-delay:${i * 70}ms"><td class="case">${esc(x.text)}</td><td>${x.truth ? "yes" : "no"}</td><td>${tick(x.regex, x.truth)}</td><td>${tick(x.meaning, x.truth)} <span class="source">p=${fmt(x.p)}</span></td></tr>`).join("")}</tbody></table>`;
+  },
+  semantic(r, head) {
+    return head("Outcomes") + `<div class="records">${r.rows.map((x) => `<div class="record"><span class="id">${esc(x.id)}</span><div><div class="text">${esc(x.text)}</div><div class="meta">status ${esc(x.status)} · ${x.leaves.length ? x.leaves.map((l) => `${esc(l.definition)} p=${fmt(l.p)}`).join(", ") : "decided by the guard, no model call"}</div></div><span class="band-chip ${x.outcome}">${x.outcome}</span></div>`).join("")}</div>`;
+  },
+};
+function tick(said, truth) {
+  const right = said === truth;
+  return `<span class="tick ${right ? "right" : "wrong"}">${said ? "yes" : "no"} ${right ? "✓" : "✗"}</span>`;
+}
+function meterScore(score, n) {
+  const at = n > 1 ? score / (n - 1) : 0;
+  return `<div style="margin-top:16px"><div class="meter" aria-hidden="true"><div class="track" style="grid-template-columns:1fr"><i style="background:var(--no-bg)"></i></div><div class="needle" style="left:${at * 100}%"></div></div></div>`;
+}
+function legend(cands) {
+  return `<div class="legend"><span class="chip-yes">yes ≥ 0.9</span><span class="chip-review">review</span>${cands ? '<span class="chip-cand">candidate the unit found</span>' : ""}<span>small numbers are p</span></div>`;
+}
+function bindScan(r) {
+  const slider = $("#scan-t"), out = $("#scan-t-out"), rows = $("#scan-rows");
+  const draw = () => {
+    const t = Number(slider.value);
+    out.textContent = t.toFixed(2);
+    rows.innerHTML = r.spans.map((s) => `<div class="span-row ${s.p >= t ? "on" : ""}"><span class="p">${fmt(s.p)}</span><div>${esc(s.text)}<div class="minibar"><i style="width:${s.p * 100}%"></i></div></div></div>`).join("");
+  };
+  slider.addEventListener("input", draw);
+  draw();
+}
+
+// ------------------------------------------------------------------ code view
+
+function codeFor(id, p) {
+  const opts = patternArgs(p);
+  const kw = (extra = []) => { const parts = [...opts, ...extra]; return parts.length ? ", " + parts.join(", ") : ""; };
+  switch (id) {
+    case "test": return `import exregex as ex\n\nverdict = ex.test(\n    ${pyStr(p.meaning)},\n    ${pyStr(p.text)}${kw().replace(/, unit=[^,]+/, "")},\n)\nprint(bool(verdict), verdict.p, verdict.band)`;
+    case "find": return `import exregex as ex\n${finderCode(p) ? "\n" + finderCode(p) : "\n"}pattern = ex.compile(${pyStr(p.meaning)}${kw()})\ntext = ${pyStr(p.text)}\n\n${p.mode === "search" ? "m = pattern.search(text)\nprint(m.text, m.span(), m.p, m.band)" : "for m in pattern.findall(text):\n    print(m.text, m.span(), m.p, m.band)"}`;
+    case "scan": return `import exregex as ex\n\nfor m in ex.scan(${pyStr(p.meaning)}, ${pyStr(p.text)}${kw()}):\n    print(f"{m.p:.2f}", m.band, m.text)   # every span, matching or not`;
+    case "sub": return `import exregex as ex\n\nredact = ex.compile(${pyStr(p.meaning)}${kw()})\ntext, count = redact.subn(${p.repl_mode === "unit" ? 'lambda m: f"[{m.unit}]"' : pyStr(p.repl ?? "[redacted]")}, ${pyStr(p.text)})`;
+    case "split": return `import exregex as ex\n\npieces = ex.split(\n    ${pyStr(p.meaning)},\n    ${pyStr(p.text)}${kw()}${p.keep ? ", keep=True" : ""},\n)`;
+    case "extract": return `import exregex as ex\n\n${p.all ? "found = ex.extractall" : "m = ex.extract"}(${pyStr(p.what)}, ${pyStr(p.text)}, unit=${pyUnit(p)}${p.context ? ", context=" + pyStr(p.context) : ""})${p.all ? "\nprint([m.text for m in found])" : "\nprint(m.text if m else None)"}`;
+    case "units": return `import exregex as ex\n\n# no model calls, no cost\nfor span in ex.find_units(${pyStr(p.text)}, ${pyUnit(p)}):\n    print(span.unit, span.text, (span.start, span.end))`;
+    case "classify": return `import exregex as ex\n\npick = ex.classify(\n    ${pyStr(p.text)},\n    {${(p.options || []).map((o) => `\n        ${JSON.stringify(o.label)}: ${o.description ? pyStr(o.description) : "None"},`).join("")}\n    },\n)\nprint(pick.label, pick.p, pick.top(3))`;
+    case "rate": return `import exregex as ex\n\nrating = ex.rate(\n    ${pyStr(p.text)},\n    ${pyStr(p.question)},\n    [${(p.levels || []).map((l) => JSON.stringify(l)).join(", ")}],\n)\nprint(rating.label, rating.score)`;
+    case "many": return `import exregex as ex\n\ntexts = [${(p.texts || []).map((t) => "\n    " + pyStr(t) + ",").join("")}\n]\npattern = ex.compile(${pyStr(p.meaning)}${kw().replace(/, unit=[^,]+/, "")})\nfor text, p in pattern.rank(texts):\n    print(f"{p:.2f}", text)\nkept = pattern.filter(texts)`;
+    case "diff": return `import exregex as ex\n\nd = ex.diff(\n    ${pyStr(p.meaning)},\n    ${pyRaw(p.regex)},\n    ${pyStr(p.text)},\n    unit=${pyUnit(p)},\n)\nprint(d)   # agree, regex only, meaning only\nfor m in d.regex_only: print("-", m.text)\nfor m in d.meaning_only: print("+", m.text)`;
+    case "classic": return `import re\nimport exregex as ex\n\nregex = re.compile(${pyRaw(p.regex)})\nfor case in [${(p.cases || []).map((c) => JSON.stringify(c.text)).join(", ")}]:\n    by_regex = bool(regex.${p.regex_mode === "search" ? "search" : "fullmatch"}(case))\n    by_meaning = ex.test(${pyStr(p.meaning)}, case)\n    print(case, by_regex, bool(by_meaning), by_meaning.p)`;
+    case "semantic": return `from exregex import Engine, openrouter\nfrom exregex import semantic as sx\n\nasks = sx.Predicate[dict](\n    ${JSON.stringify(p.name)}, version=1,\n    question=${pyStr(p.question)},\n    fields={"body": ("text",)},\n)\nquery = ${p.guard ? `sx.field("status").eq(${JSON.stringify(p.status_required)}) & asks` : "asks"}\n\nwith Engine(openrouter()) as engine:\n    for record in records:\n        result = engine.evaluate(\n            query.bind(record, key=record["id"]),\n            band=sx.Band(no=${p.band_no}, yes=${p.band_yes}),\n        )\n        print(record["id"], result.outcome, result.complete)`;
+  }
+  return "";
+}
+function renderCode() {
+  const id = state.station;
+  const box = $("#code");
+  if (!box) return;
+  const code = codeFor(id, state.params[id] || {});
+  if (!code) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="code-head"><h3>The same thing in Python</h3><button class="btn small" type="button" id="copy-code">Copy</button></div><pre class="code"><code>${colorize(code)}</code></pre>`;
+  $("#copy-code").addEventListener("click", async (e) => {
+    try { await navigator.clipboard.writeText(code); e.target.textContent = "Copied"; } catch { e.target.textContent = "Select and copy"; }
+    setTimeout(() => (e.target.textContent = "Copy"), 1400);
+  });
+}
+
+// ------------------------------------------------------------------ semantic station
+
+function semanticForm() {
+  const p = state.params.semantic;
+  const recs = p.records.map((r) => `${r.id} | ${r.status} | ${r.text}`).join("\n");
+  return `<form id="form" autocomplete="off">
+  <div class="field"><label for="s-question">Predicate question</label><textarea class="meaning" id="s-question" rows="2">${esc(p.question)}</textarea><span class="hint">Refers to the record's text as item.body.</span></div>
+  <label class="check field"><input type="checkbox" id="s-guard" ${p.guard ? "checked" : ""}> Only when <code>status</code> is <input type="text" id="s-status" class="code" value="${esc(p.status_required)}" style="width:110px;padding:4px 8px"> (an exact guard, no model)</label>
+  <div class="row"><div class="field"><label for="s-no">Band: NO at or below <output id="s-no-out">${fmt(p.band_no)}</output></label><input type="range" id="s-no" min="0" max="0.5" step="0.01" value="${p.band_no}"></div>
+  <div class="field"><label for="s-yes">YES at or above <output id="s-yes-out">${fmt(p.band_yes)}</output></label><input type="range" id="s-yes" min="0.5" max="1" step="0.01" value="${p.band_yes}"></div></div>
+  <div class="field"><label for="s-records">Records, one per line: id | status | text</label><textarea class="code" id="s-records" rows="6">${esc(recs)}</textarea></div>
+  <div class="actions"><button class="btn primary" id="run" type="submit">Evaluate</button><span class="kbd">Ctrl+Enter</span></div></form>`;
+}
+function bindSemantic() {
+  const form = $("#form");
+  const read = () => {
+    const p = state.params.semantic;
+    p.question = $("#s-question").value;
+    p.guard = $("#s-guard").checked;
+    p.status_required = $("#s-status").value;
+    p.band_no = Number($("#s-no").value);
+    p.band_yes = Number($("#s-yes").value);
+    $("#s-no-out").textContent = fmt(p.band_no);
+    $("#s-yes-out").textContent = fmt(p.band_yes);
+    p.records = $("#s-records").value.split("\n").map((l) => l.split("|").map((x) => x.trim())).filter((x) => x[0]).map(([id, status, ...text]) => ({ id, status: status || "", text: text.join(" | ") }));
+    markEdited();
+    renderCode();
+  };
+  form.addEventListener("input", read);
+  form.addEventListener("submit", (e) => { e.preventDefault(); read(); run(); });
+  form.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); read(); run(); } });
+  renderCode();
+}
+
+// ------------------------------------------------------------------ engine station
+
+async function renderEngine() {
+  const view = $("#engine-view");
+  if (!boot.ready) { view.innerHTML = `<div class="panel">${bootView()}</div>`; return; }
+  const s = JSON.parse(await ask("stats"));
+  const lat = s.latency && s.latency.p50 != null ? Math.round(s.latency.p50) + " ms" : "-";
+  view.innerHTML = `<div class="panel" style="margin-bottom:24px"><div class="result-head"><h2>This session</h2><span class="source">${s.mode === "live" ? `<b>Live Jev</b>, capped at ${money(s.budget)}` : "<b>Recorded answers only</b>. Add a key to ask new questions."}</span></div>
+  <div class="stats"><div class="stat"><span>Requests</span><strong>${s.requests}</strong></div><div class="stat"><span>Replayed decisions</span><strong>${s.cached}</strong></div><div class="stat"><span>Spent</span><strong>${money(s.cost_usd)}</strong></div><div class="stat"><span>Input tokens</span><strong>${s.input_tokens}</strong></div><div class="stat"><span>Median latency</span><strong>${lat}</strong></div></div></div>
+  <div class="workbench"><div class="panel"><div class="result-head"><h2>The lockfile</h2><button class="btn small" type="button" id="dl-lock">Download decisions.jsonl</button></div><p class="source" style="margin:0 0 12px">${s.decisions.length} decisions, plus ${s.semantic} semantic observation${s.semantic === 1 ? "" : "s"} kept beside it in decisions.semantic-v1.jsonl. Each line is one request: the questions asked, the answers, and the exact model. Commit it, review it, and run CI with <code>Engine(replay=True)</code>, which never touches the network.</p><div class="lock">${s.decisions.slice().reverse().slice(0, 80).map((d) => Object.entries(d.asked).map(([k, q]) => `<div class="lock-line">${esc(q).replace(/`([^`]+)`/g, "<code>$1</code>")}<br><span class="ans">${esc(answerText(d.answers[k]))}</span> <code>${esc(d.model)}</code></div>`).join("")).join("")}</div></div>
+  <div class="panel"><div class="result-head"><h2>Typed errors</h2></div><p class="source" style="margin:0 0 6px">Trigger each one here. None of them sends anything.</p>${[
+    ["budget", "BudgetExceeded", "A spending cap is checked before a request is sent."],
+    ["cachemiss", "CacheMiss", "Replay mode never calls out. An unrecorded question raises instead."],
+    ["config", "ConfigError", "No key, no backend: the error says how to fix it."],
+    ["limit", "LimitError", "A documented limit, caught before sending: rate takes 2 to 10 levels."],
+    ["value", "ValueError", "A custom question must say where the span goes, with {ref}."],
+  ].map(([k, name, about]) => `<div class="err-demo"><p><b>${name}</b><br><span class="source">${about}</span></p><button class="btn small" type="button" data-err="${k}">Trigger</button><output id="err-${k}"></output></div>`).join("")}</div></div>`;
+  $("#dl-lock").addEventListener("click", async () => {
+    const text = await ask("lockfile");
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([text], { type: "application/jsonl" })), download: "decisions.jsonl" });
+    document.body.append(a); a.click(); a.remove();
+  });
+  view.onclick = async (e) => {
+    const b = e.target.closest("[data-err]");
+    if (!b) return;
+    b.disabled = true;
+    $("#err-" + b.dataset.err).textContent = await ask("error", { kind: b.dataset.err });
+    b.disabled = false;
+  };
+}
+function answerText(a) {
+  if (!a) return "";
+  if (a.type === "noul") return "p = " + fmt(a.noul);
+  if (a.type === "choice") return "picked " + a.choice;
+  if (a.type === "score") return "score " + fmt(a.score);
+  return JSON.stringify(a);
+}
+
+// ------------------------------------------------------------------ console station
+
+const SNIPPETS = __SNIPPETS_JSON__.map((x) => [x.title, x.code]);
+function consoleView() {
+  return `<div class="presets" role="group" aria-label="Snippets">${SNIPPETS.map(([t], i) => `<button type="button" data-snippet="${i}">${esc(t)}</button>`).join("")}</div>
+  <div class="workbench"><form class="panel" id="console-form"><div class="field"><label for="console-code">Python</label><textarea class="code" id="console-code" rows="12" spellcheck="false">${esc(state.consoleCode ?? SNIPPETS[1][1])}</textarea></div><div class="actions"><button class="btn primary" id="run" type="submit">Run</button><span class="kbd">Ctrl+Enter</span></div></form>
+  <div class="panel"><div class="result-head"><h2>Output</h2></div><pre class="code console-out" id="console-out">${esc(state.consoleOut ?? "")}</pre></div></div>`;
+}
+async function runConsole() {
+  const code = $("#console-code");
+  if (!code) return;
+  state.consoleCode = code.value;
+  if (!boot.ready) { $("#console-out").textContent = "Python is still starting."; return; }
+  $("#run").disabled = true;
+  $("#console-out").textContent = "Running...";
+  state.consoleOut = await ask("console", { code: code.value });
+  $("#console-out").textContent = state.consoleOut || "(no output)";
+  $("#run").disabled = false;
+  refreshEnginePill();
+}
+function bindConsole() {
+  const form = $("#console-form"), code = $("#console-code");
+  form.addEventListener("submit", (e) => { e.preventDefault(); runConsole(); });
+  code.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runConsole(); }
+    if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); const s = code.selectionStart; code.setRangeText("    ", s, code.selectionEnd, "end"); }
+  });
+}
+$("#main").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-snippet]");
+  if (!b) return;
+  $("#console-code").value = SNIPPETS[Number(b.dataset.snippet)][1];
+  runConsole();
+});
+
+// ------------------------------------------------------------------ boot, key, engine pill
+
+const BOOT_STEPS = [["python", "Starting Python in your browser (Pyodide)"], ["package", "Installing " + PACKAGE + " from PyPI"], ["answers", "Loading the recorded Jev answers"], ["ready", "Ready"]];
+function bootView() {
+  const at = BOOT_STEPS.findIndex(([k]) => k === boot.step);
+  if (boot.error) return `<div class="result-head"><h2>Python did not start</h2></div><div class="notice error"><p>${esc(boot.error)}</p><p>The playground needs a recent browser and a connection to cdn.jsdelivr.net and pypi.org. Reload to try again.</p></div>`;
+  return `<div class="result-head"><h2>Getting ready</h2></div><div class="boot"><ol>${BOOT_STEPS.slice(0, 3).map(([k, l], i) => `<li class="${i < at ? "done" : i === at ? "now" : ""}">${esc(l)}</li>`).join("")}</ol><div class="skeleton"><i></i><i></i><i></i></div><p class="source">The first visit downloads Python, about 10 MB. Your browser caches it after that.</p></div>`;
+}
+boot.listeners.push(() => {
+  refreshEnginePill();
+  if (boot.ready) {
+    restoreKey().then(() => {
+      if (state.station === "engine") renderEngine();
+      else if (state.station !== "console") run();
+    });
+  } else if ($("#result")) $("#result").innerHTML = bootView();
+  else if (state.station === "engine") renderEngine();
+});
+
+let liveMode = false;
+async function refreshEnginePill() {
+  const pill = $("#engine-pill"), label = $("#engine-label");
+  if (boot.error) { label.textContent = "Python did not start"; return; }
+  if (!boot.ready) { label.textContent = "Starting Python"; return; }
+  pill.dataset.mode = liveMode ? "live" : "recorded";
+  if (!liveMode) { label.textContent = "Recorded answers"; return; }
+  try {
+    const s = JSON.parse(await ask("stats"));
+    label.textContent = `Live Jev · ${money(s.cost_usd)} of ${money(s.budget)}`;
+  } catch { label.textContent = "Live Jev"; }
+}
+$("#engine-pill").addEventListener("click", () => openKey());
+
+function storage(kind) { try { return window[kind]; } catch { return null; } }
+async function restoreKey() {
+  const key = storage("sessionStorage")?.getItem("exregex-key") || storage("localStorage")?.getItem("exregex-key");
+  const budget = storage("localStorage")?.getItem("exregex-budget") || "0.05";
+  if (key) await setKey(key, budget);
+}
+async function setKey(key, budget) {
+  const mode = await ask("key", { key, budget: Number(budget) || 0.05 });
+  liveMode = mode === "live";
+  refreshEnginePill();
+}
+function openKey() {
+  const d = $("#key-dialog");
+  $("#key-input").value = "";
+  $("#key-input").placeholder = liveMode ? "A key is set. Paste another to replace it." : "sk-or-...";
+  $("#budget-input").value = storage("localStorage")?.getItem("exregex-budget") || "0.05";
+  $("#key-remember").checked = !!storage("localStorage")?.getItem("exregex-key");
+  d.showModal();
+  $("#key-input").focus();
+}
+$("#key-form").addEventListener("submit", async (e) => {
+  const action = e.submitter && e.submitter.value;
+  const budget = $("#budget-input").value || "0.05";
+  storage("localStorage")?.setItem("exregex-budget", budget);
+  if (action === "clear") {
+    storage("sessionStorage")?.removeItem("exregex-key");
+    storage("localStorage")?.removeItem("exregex-key");
+    if (boot.ready) await setKey("", budget);
+    return;
+  }
+  const key = $("#key-input").value.trim();
+  if (!key) { if (boot.ready && liveMode) await setKey(storage("sessionStorage")?.getItem("exregex-key") || storage("localStorage")?.getItem("exregex-key") || "", budget); return; }
+  storage("sessionStorage")?.setItem("exregex-key", key);
+  if ($("#key-remember").checked) storage("localStorage")?.setItem("exregex-key", key);
+  else storage("localStorage")?.removeItem("exregex-key");
+  if (boot.ready) {
+    await setKey(key, budget);
+    const r = state.results[state.station];
+    if (r && r.status === "unrecorded") run();
+  }
+});
+
+// ------------------------------------------------------------------ start
+
+const start = location.hash.slice(1);
+if (STATIONS.some((s) => s.id === start)) state.station = start;
+renderNav();
+renderStation();
+</script>
+</body>
+</html>

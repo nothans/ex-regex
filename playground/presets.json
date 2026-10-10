@@ -1,0 +1,354 @@
+{
+  "test": [
+    {
+      "title": "A refund request",
+      "params": { "meaning": "the writer asks, now, to get money back", "text": "The lamp arrived cracked down the middle. Please refund my payment." }
+    },
+    {
+      "title": "Thanks for the refund",
+      "params": { "meaning": "the writer asks, now, to get money back", "text": "The refund came through yesterday. Thanks for the quick help!" }
+    },
+    {
+      "title": "Sarcasm",
+      "params": { "meaning": "the writer is unhappy about the situation", "text": "Great, another outage. Exactly what I wanted on launch day." }
+    },
+    {
+      "title": "February 30",
+      "params": { "meaning": "a date that exists on the calendar", "text": "2025-02-30" }
+    },
+    {
+      "title": "A leap day",
+      "params": { "meaning": "a date that exists on the calendar", "text": "2024-02-29" }
+    },
+    {
+      "title": "Scunthorpe",
+      "params": { "meaning": "contains profanity or an insult", "text": "I grew up in Scunthorpe, went to school in Essex, and now I run a cocktail bar." }
+    }
+  ],
+  "find": [
+    {
+      "title": "Personal contacts only",
+      "params": {
+        "meaning": "a way to reach one specific individual person directly (a shared team, company, sales, support, or no-reply address does not count)",
+        "text": "Ping me at quasar.marmot.7k9@example.invalid or text 617-555-0143. For invoices, write billing@quasar-tools.example.invalid. Our support line is 800-555-0199.",
+        "unit": "contact",
+        "mode": "findall"
+      }
+    },
+    {
+      "title": "Sentences that ask for money back",
+      "params": {
+        "meaning": "the writer asks, now, to get money back",
+        "text": "Hi team. My order arrived two weeks late. The box was crushed and the mug inside is in pieces. I'd like my money back for the mug. The refund you sent last month for the plates was quick, thanks for that.",
+        "unit": "sentence",
+        "mode": "findall"
+      }
+    },
+    {
+      "title": "The best one only (search)",
+      "params": {
+        "meaning": "the moment the writer gets angry",
+        "text": "I ordered on Monday. It shipped on Wednesday, which was fine. Then it sat in a warehouse for nine days and nobody answered my three emails, which is ridiculous. It finally showed up today.",
+        "unit": "sentence",
+        "mode": "search"
+      }
+    },
+    {
+      "title": "Regex narrows, meaning decides",
+      "params": {
+        "meaning": "a payment that failed",
+        "text": "09:00:01 INFO user login ok\n09:00:04 WARN slow query on orders (2.1s)\n09:00:07 ERROR card declined for order A-1182\n09:00:09 INFO cache warmed\n09:00:12 ERROR disk nearly full on /var\n09:00:15 WARN retrying charge for order A-1190 after gateway timeout",
+        "unit": "line",
+        "prefilter": "\\b(ERROR|WARN)\\b",
+        "mode": "findall"
+      }
+    },
+    {
+      "title": "Your regex as the finder",
+      "params": {
+        "meaning": "the order the customer wants refunded",
+        "text": "Orders A-1182 and A-1190 arrived on Tuesday. A-1182 is fine, but the lamp in A-1190 is cracked and I want my money back for it.",
+        "finder": "\\bA-\\d{3,}\\b",
+        "mode": "findall"
+      }
+    }
+  ],
+  "scan": [
+    {
+      "title": "A mixed ticket",
+      "params": {
+        "meaning": "asks for help, reports a problem, or complains (a thank-you, praise, or an FYI needs no action)",
+        "text": "Thanks for the fast shipping last time! This order came with the wrong charger. Could you send the right one? FYI the tracking link in your email works now. Also, the app logs me out every ten minutes, which is driving me up the wall. Love the new colors, by the way.",
+        "unit": "sentence"
+      }
+    },
+    {
+      "title": "Spoilers",
+      "params": {
+        "meaning": "reveals a plot twist or the ending of the story",
+        "text": "The opening chase is wonderful. The soundtrack is mostly synths. It turns out the detective was the thief all along. I watched it twice. The final scene, where she burns the letters, made me cry.",
+        "unit": "sentence"
+      }
+    }
+  ],
+  "sub": [
+    {
+      "title": "Redact people, keep teams",
+      "params": {
+        "meaning": "a way to reach one specific individual person directly (a shared team, company, sales, support, or no-reply address does not count)",
+        "text": "Text me at 617-555-0143 or write nebula.wombat.8p2@example.invalid. Billing questions go to billing@quasar-tools.example.invalid, and noreply@quasar-tools.example.invalid sends the receipts.",
+        "unit": "contact",
+        "repl": "[redacted]",
+        "repl_mode": "text"
+      }
+    },
+    {
+      "title": "Label what was removed",
+      "params": {
+        "meaning": "a way to reach one specific individual person directly (a shared team, company, sales, support, or no-reply address does not count)",
+        "text": "Text me at 617-555-0143 or write nebula.wombat.8p2@example.invalid. Billing questions go to billing@quasar-tools.example.invalid, and noreply@quasar-tools.example.invalid sends the receipts.",
+        "unit": "contact",
+        "repl_mode": "unit"
+      }
+    },
+    {
+      "title": "Soften the insults",
+      "params": {
+        "meaning": "an insult aimed at a person",
+        "text": "The courier was late again. Honestly, the guy at the depot is a clueless clown. The package itself was fine. Whoever packed it is a genius.",
+        "unit": "sentence",
+        "repl": "[removed: insult]",
+        "repl_mode": "text"
+      }
+    }
+  ],
+  "split": [
+    {
+      "title": "Split notes at their headings",
+      "params": {
+        "meaning": "a section heading (a short title line, not a sentence)",
+        "text": "Getting started\nInstall the package with pip.\nImport it as ex.\nWhy meaning beats shape\nA regex sees what text looks like.\nA meaning sees what it says.\nWhere a regex still wins\nSyntax, counting, and anything you can check in code.",
+        "unit": "line",
+        "keep": true
+      }
+    },
+    {
+      "title": "Break a chat at topic changes",
+      "params": {
+        "meaning": "the writer changes to a new topic",
+        "text": "The demo went well. Everyone liked the redaction example. Separately, did anyone book the room for Friday? I can take care of that. Oh, and the coffee machine is broken again.",
+        "unit": "sentence",
+        "keep": false
+      }
+    }
+  ],
+  "extract": [
+    {
+      "title": "The total due, not the subtotal",
+      "params": { "what": "the total amount due", "text": "Subtotal: $1,250.00. Tax: $65.50. Total due: $1,315.50. Paid by card ending 4242.", "unit": "money" }
+    },
+    {
+      "title": "What is still owed",
+      "params": { "what": "the amount the customer still has to pay", "text": "Invoice total: $480.00. Deposit received: $200.00. Balance due on delivery: $280.00.", "unit": "money" }
+    },
+    {
+      "title": "The appointment, not the booking",
+      "params": { "what": "the date of the follow-up appointment", "text": "Booked on 2026-10-02 by the front desk. Seen 2026-10-08. Please come back on 2026-11-05 for the follow-up.", "unit": "date" }
+    },
+    {
+      "title": "Every price that went up",
+      "params": { "what": "a price after an increase", "text": "Basic stays at $9. Plus moves from $19 to $24. Team goes from $49 to $59, and the annual plan drops to $480.", "unit": "money", "all": true }
+    }
+  ],
+  "units": [
+    {
+      "title": "Contacts, even disguised",
+      "params": { "text": "Mail quasar at example dot invalid, or quasar.marmot.7k9@example.invalid. Call five five five, oh one four three, or 617-555-0143. I'm @quasar on most sites, see https://quasar.example.invalid/about.", "unit": "contact" }
+    },
+    {
+      "title": "Numbers of every kind",
+      "params": { "text": "On 2026-10-09 at 14:30 the service at 10.0.0.12 returned 503 for 12% of requests and cost $1,315.50 in credits.", "unit": ["money", "number", "percent", "date", "time", "ipv4"] }
+    },
+    {
+      "title": "Names and quotes",
+      "params": { "text": "Ada Lovelace wrote that the engine \"might act upon other things besides number\". Grace Hopper called it \"the most dangerous phrase\": \"we've always done it this way\".", "unit": ["name", "quote"] }
+    }
+  ],
+  "classify": [
+    {
+      "title": "Route a ticket",
+      "params": {
+        "text": "I was charged twice for October and the second charge still hasn't been reversed.",
+        "options": [
+          { "label": "billing", "description": "payments, charges, invoices, refunds" },
+          { "label": "bug", "description": "errors, crashes, something not working" },
+          { "label": "feature", "description": "a request for something new" },
+          { "label": "other", "description": "anything else" }
+        ]
+      }
+    },
+    {
+      "title": "Route another",
+      "params": {
+        "text": "Would love a dark mode for the dashboard, my eyes hurt at night.",
+        "options": [
+          { "label": "billing", "description": "payments, charges, invoices, refunds" },
+          { "label": "bug", "description": "errors, crashes, something not working" },
+          { "label": "feature", "description": "a request for something new" },
+          { "label": "other", "description": "anything else" }
+        ]
+      }
+    },
+    {
+      "title": "Language of the message",
+      "params": {
+        "text": "Je voudrais être remboursé, le produit est défectueux.",
+        "options": [ { "label": "English" }, { "label": "French" }, { "label": "German" }, { "label": "Spanish" } ]
+      }
+    }
+  ],
+  "rate": [
+    {
+      "title": "How urgent?",
+      "params": {
+        "text": "Your app deleted my thesis the night before it's due. I need someone to call me right now.",
+        "question": "How urgent is `text`?",
+        "levels": ["Can wait", "This week", "Today", "Right now"]
+      }
+    },
+    {
+      "title": "How excited?",
+      "params": {
+        "text": "It works. The update installed fine.",
+        "question": "How excited does the writer of `text` sound?",
+        "levels": ["Flat", "Mildly pleased", "Happy", "Thrilled"]
+      }
+    }
+  ],
+  "many": [
+    {
+      "title": "Triage a queue",
+      "params": {
+        "meaning": "the writer asks, now, to get money back",
+        "texts": [
+          "Return this and give me back what I paid, it's useless.",
+          "The refund came through yesterday, thanks!",
+          "Can you change my delivery address to the office?",
+          "I was billed $49 for a plan I never signed up for. Undo that charge.",
+          "Please don't refund me, I just want the right size.",
+          "Je voudrais être remboursé, le produit est défectueux.",
+          "Love the new app, great work.",
+          "If the replacement doesn't arrive by Friday I'll want a refund."
+        ]
+      }
+    }
+  ],
+  "diff": [
+    {
+      "title": "Audit a refund regex",
+      "params": {
+        "meaning": "the writer asks, now, to get money back",
+        "regex": "(?i)\\b(refund\\w*|money back|reimburs\\w*)\\b",
+        "text": "Please don't refund me, I just want the right size sent out.\nReturn this and give me back what I paid, it's useless.\nThe refund came through yesterday, thanks for the quick help!\nI want my money back for the cracked lamp.\nI was billed $49 for a plan I never signed up for. Undo that charge.\nWill I be reimbursed for the shipping?\nJe voudrais être remboursé, le produit est défectueux.",
+        "unit": "line"
+      }
+    }
+  ],
+  "classic": [
+    {
+      "title": "The Scunthorpe problem",
+      "params": {
+        "meaning": "contains profanity or an insult",
+        "regex": "(?i)(cunt|cock|sex|ass)",
+        "regex_mode": "search",
+        "cases": [
+          { "text": "I grew up in Scunthorpe.", "truth": false },
+          { "text": "Two cocktails, please.", "truth": false },
+          { "text": "Our office is in Essex.", "truth": false },
+          { "text": "She passed the class with honors.", "truth": false },
+          { "text": "You absolute idiot, you broke it again.", "truth": true },
+          { "text": "What a moron, honestly.", "truth": true }
+        ]
+      }
+    },
+    {
+      "title": "Sarcasm",
+      "params": {
+        "meaning": "the writer is unhappy about the situation",
+        "regex": "(?i)\\b(great|love|perfect|wonderful)\\b",
+        "regex_mode": "search",
+        "regex_means": "reject",
+        "cases": [
+          { "text": "Great, another outage.", "truth": true },
+          { "text": "Perfect, the build broke again right before the demo.", "truth": true },
+          { "text": "Love it when my coffee goes cold during standup.", "truth": true },
+          { "text": "The fix worked. Great job!", "truth": false }
+        ]
+      }
+    },
+    {
+      "title": "A date that exists",
+      "params": {
+        "meaning": "a date that exists on the calendar",
+        "regex": "\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])",
+        "cases": [
+          { "text": "2024-02-29", "truth": true },
+          { "text": "2025-02-29", "truth": false },
+          { "text": "2025-02-30", "truth": false },
+          { "text": "2025-04-31", "truth": false },
+          { "text": "1900-02-29", "truth": false },
+          { "text": "2000-02-29", "truth": true }
+        ]
+      }
+    },
+    {
+      "title": "Palindromes",
+      "params": {
+        "meaning": "reads the same forwards and backwards",
+        "regex": "(?i)(\\w)(\\w)?\\w?\\2\\1",
+        "cases": [
+          { "text": "racecar", "truth": true },
+          { "text": "level", "truth": true },
+          { "text": "rotator", "truth": true },
+          { "text": "palindrome", "truth": false },
+          { "text": "abcdcba", "truth": true },
+          { "text": "abcdcbz", "truth": false }
+        ]
+      }
+    },
+    {
+      "title": "Balanced parentheses",
+      "params": {
+        "meaning": "every opening parenthesis has a matching closing parenthesis, in the right order",
+        "regex": "\\((?:[^()]|\\([^()]*\\))*\\)",
+        "cases": [
+          { "text": "(a(b)c)", "truth": true },
+          { "text": "((a)(b))", "truth": true },
+          { "text": "(((x)))", "truth": true },
+          { "text": "(a(b c)", "truth": false },
+          { "text": ")(", "truth": false },
+          { "text": "(a)(b))", "truth": false }
+        ]
+      }
+    }
+  ],
+  "semantic": [
+    {
+      "title": "Open refund requests",
+      "params": {
+        "name": "support.refund",
+        "question": "Does item.body ask for money to be returned?",
+        "guard": true,
+        "status_required": "open",
+        "band_no": 0.15,
+        "band_yes": 0.85,
+        "records": [
+          { "id": "T-101", "status": "open", "text": "Please refund the duplicate charge from Monday." },
+          { "id": "T-102", "status": "open", "text": "Thanks, the refund arrived this morning." },
+          { "id": "T-103", "status": "closed", "text": "I want my money back for the broken kettle." },
+          { "id": "T-104", "status": "open", "text": "Not sure yet, I may return it if the strap breaks again." }
+        ]
+      }
+    }
+  ]
+}

@@ -11,6 +11,10 @@
 
 A Python library for using typed model decisions inside ordinary software. Use the familiar text API below, or compose predicates and record patterns through the [semantic programming API](https://github.com/nothans/ex-regex/blob/main/docs/semantic.md).
 
+**[Try it in your browser](https://nothans.github.io/ex-regex/).** The playground runs the real package in Python on the page, with a station for every feature. The examples replay recorded Jev answers, so there is nothing to install and no key to add. Bring an OpenRouter key to ask your own questions.
+
+[![The ex-regex playground scanning a support ticket: each sentence gets a probability, and a threshold slider picks the ones that need action.](https://raw.githubusercontent.com/nothans/ex-regex/main/images/playground.png)](https://nothans.github.io/ex-regex/)
+
 [Get it on PyPI](https://pypi.org/project/ex-regex/) or [install and try it offline](#install), including match, negative, uncertain, and failure outcomes without an API key. The text examples below make live calls and show illustrative outputs.
 
 ```python
@@ -323,6 +327,16 @@ if needs_action.test(message):
 ```python
 ex.split("a section heading (a short title line, not a sentence)", doc, unit="line", keep=True)
 # ['Introduction', 'We built a thing.\nIt works.', 'Installation steps', 'Run pip install.\nThen import it.', ...]
+```
+
+**Find the unsourced claims in a draft.**
+[`examples/claim_check.py`](examples/claim_check.py) asks three narrow questions per sentence: is it a checkable fact, does it say where the fact came from, and is it the writer's own result.
+Code handles the Markdown, links, line numbers, and figures:
+
+```bash
+python examples/claim_check.py post.md --cache post.claims.jsonl
+# post.md: 17 factual claims (5 unsourced, 0 check, 8 first-hand, 2 sourced, 2 linked)
+#   43: It's also cheap: $0.042 per million input tokens, and output is free.  [$0.042]
 ```
 
 **Check a commit message in a hook:**

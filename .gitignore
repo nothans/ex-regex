@@ -14,3 +14,7 @@ build/
 evals/results/*.jsonl
 decisions.jsonl
 *.semantic-v1.jsonl
+!playground/decisions.jsonl
+!playground/decisions.semantic-v1.jsonl
+playground/ex-regex-playground.html
+node_modules/
