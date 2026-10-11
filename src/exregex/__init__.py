@@ -1,4 +1,4 @@
-"""ex-regex: leave regex behind. Match text by what it means.
+"""ex-regex: find, replace, split, and extract text by what it means.
 
     import exregex as ex
 

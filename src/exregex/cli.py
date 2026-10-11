@@ -367,7 +367,7 @@ def _cmd_backend(args: argparse.Namespace, engine: Engine) -> int:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    p = argparse.ArgumentParser(prog="exregex", description="Leave regex behind: find, replace, split, and extract text by what it means.")
+    p = argparse.ArgumentParser(prog="exregex", description="Find, replace, split, and extract text by what it means.")
     p.add_argument("--version", action="version", version=f"exregex {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
 

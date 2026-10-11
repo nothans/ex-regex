@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ex-regex"
 dynamic = ["version"]
-description = "Leave regex behind: find, replace, split, and extract text by what it means, with typed decisions from Jev."
+description = "Find, replace, split, and extract text by what it means, with typed decisions from Jev."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
