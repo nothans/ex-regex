@@ -27,7 +27,7 @@ To run it locally, build `ex-regex-playground.html` (below) and open it by doubl
 
 ## Rebuild
 
-After changing a preset, record and build (needs `OPENROUTER_API_KEY` and ex-regex 0.1.0a1, the release the page installs):
+After changing a preset, record and build (needs `OPENROUTER_API_KEY` and ex-regex 0.2.0a1, the release the page installs):
 
 ```
 python playground/record.py

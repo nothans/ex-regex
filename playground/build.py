@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-VERSION = "0.1.0a1"
+VERSION = "0.2.0a1"
 
 
 def script_literal(value: object) -> str:
