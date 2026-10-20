@@ -1,6 +1,6 @@
 """Record the playground's demo answers: every preset, asked live, kept in a decision lockfile.
 
-    uv venv .venv-playground && uv pip install --python .venv-playground "ex-regex==0.2.0a1"
+    uv venv .venv-playground && uv pip install --python .venv-playground "ex-regex==0.2.0a2"
     .venv-playground/Scripts/python playground/record.py
 
 Needs OPENROUTER_API_KEY. The lockfile (decisions.jsonl) is what the playground replays offline,
@@ -25,8 +25,8 @@ MODEL = "typesafe/jev-1.13"
 
 
 def main() -> int:
-    if ex.__version__ != "0.2.0a1":
-        print(f"record with the published 0.2.0a1, not {ex.__version__}: the playground installs that release", file=sys.stderr)
+    if ex.__version__ != "0.2.0a2":
+        print(f"record with the published 0.2.0a2, not {ex.__version__}: the playground installs that release", file=sys.stderr)
         return 2
     if not os.environ.get("OPENROUTER_API_KEY"):
         print("OPENROUTER_API_KEY is not set", file=sys.stderr)
