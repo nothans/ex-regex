@@ -44,7 +44,7 @@ path = "src/exregex/_version.py"
 packages = ["src/exregex"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src/exregex", "/tests", "/examples", "/docs", "/scripts", "/evals/*.py", "/evals/*.md", "/evals/data/classics.jsonl", "/evals/data/classics_hard.jsonl", "/evals/data/contact.jsonl", "/evals/data/contact_holdout.jsonl", "/evals/data/refund.jsonl", "/evals/data/total.jsonl", "/evals/results/*.md", "/README.md", "/CHANGELOG.md", "/LICENSE", "/pyproject.toml"]
+include = ["/src/exregex", "/tests", "/examples", "/docs", "/scripts", "/evals/*.py", "/evals/*.md", "/evals/data/adversarial.jsonl", "/evals/data/classics.jsonl", "/evals/data/classics_hard.jsonl", "/evals/data/contact.jsonl", "/evals/data/contact_holdout.jsonl", "/evals/data/refund.jsonl", "/evals/data/total.jsonl", "/evals/results/*.md", "/README.md", "/CHANGELOG.md", "/LICENSE", "/pyproject.toml"]
 exclude = ["/.meta", "**/.cache"]
 
 [tool.pytest.ini_options]
