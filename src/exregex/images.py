@@ -5,7 +5,7 @@
 
 `image()` returns a Chat Completions image part, the shape OpenRouter's Decisions endpoint
 reads at any depth in the state. TypeSafe's own API takes pictures in a separate `assets` map
-instead, which ex-regex does not build yet.
+instead; the `typesafe()` backend translates (see `to_assets`), so the same state works on both.
 
 The size is checked before sending, because one bad picture fails the whole request. The
 documented range is 256 to 1,568 pixels a side; measured through OpenRouter on 2026-10-15, every
@@ -19,10 +19,11 @@ answered about one item from another item's picture.
 from __future__ import annotations
 
 import base64
+import hashlib
 import os
 import struct
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 from .errors import LimitError
 
@@ -78,3 +79,41 @@ def image(source: Union[str, os.PathLike[str], bytes], *, check: bool = True) ->
             )
     url = f"data:{_MIME[kind]};base64,{base64.b64encode(data).decode('ascii')}"
     return {"type": "image_url", "image_url": {"url": url}}
+
+
+_FORMATS = {"image/png": "png", "image/jpeg": "jpg", "image/jpg": "jpg"}
+
+
+def is_image(value: Any) -> bool:
+    return isinstance(value, dict) and value.get("type") == "image_url" and isinstance(value.get("image_url"), dict)
+
+
+def has_images(value: Any) -> bool:
+    if is_image(value):
+        return True
+    if isinstance(value, dict):
+        return any(has_images(v) for v in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(has_images(v) for v in value)
+    return False
+
+
+def to_assets(value: Any, assets: dict) -> Any:
+    """TypeSafe's shape: each image part becomes a reference string, and the image goes in
+    `assets` under that reference. The reference is derived from the image's bytes, so the same
+    picture always gets the same reference (and a request's bytes, and its cache key, are stable).
+    """
+    if is_image(value):
+        url = value["image_url"].get("url", "")
+        head, _, data = url.partition(",")
+        mime = head.removeprefix("data:").split(";")[0].lower()
+        if not head.startswith("data:") or ";base64" not in head or mime not in _FORMATS:
+            raise LimitError("image: TypeSafe takes PNG or JPEG data, as built by exregex.image()")
+        ref = "img-" + hashlib.sha256(data.encode("ascii")).hexdigest()[:16]
+        assets[ref] = {"type": "image", "format": _FORMATS[mime], "data_base64": data}
+        return ref
+    if isinstance(value, dict):
+        return {k: to_assets(v, assets) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [to_assets(v, assets) for v in value]
+    return value

@@ -117,6 +117,11 @@ def prepare(backend, state_utf8: bytes, questions: tuple[NamedQuestion, ...]) ->
             raise BackendError("duplicate question ID")
         qs[named.name] = named.question
     state = json.loads(state_utf8)
+    if getattr(backend, "image_assets", False):
+        from ..images import has_images
+
+        if has_images(state):
+            raise UnsupportedCapability("semantic programs do not send pictures to TypeSafe's assets API yet; use engine.ask for pictures")
     if caps.adapter == "openai-decisions":
         body = {"model": caps.model, "input": state_utf8.decode("utf-8"), "questions": [backend._question(k, q) for k, q in qs.items()]}
     else:

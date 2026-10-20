@@ -1,6 +1,7 @@
 """Jev 1.14 support: Box questions, pictures in the state, and long-context requests."""
 
 import base64
+import json
 import struct
 import zlib
 
@@ -150,3 +151,72 @@ def test_long_context_lets_a_long_text_be_judged_whole(server):
     with pytest.raises(LimitError):
         ex.test("a story", book, unit="text", engine=Engine(SystemOne(server.url, model="m"), cache=None))
     assert ex.test("a story", book, unit="text", engine=Engine(SystemOne(server.url, model="m", long_context=True), cache=None))
+
+
+# ------------------------------------------------------------------ pictures straight to TypeSafe (assets)
+
+
+def _header(server, i, name):
+    return {k.lower(): v for k, v in server.headers[i].items()}.get(name.lower())
+
+
+def test_typesafe_assets_body_matches_the_documented_shape(server):
+    server.handler = lambda body: {n: {"type": "noul", "noul": 0.9} for n in body["questions"]}
+    png_part, jpg_part = ex.image(png(300, 300)), ex.image(jpeg_header(400, 300))
+    engine = Engine(SystemOne(server.url, model="jev-1.14.0", image_assets=True), cache=None)
+    engine.ask({"photo": png_part, "frames": [jpg_part, png_part]}, {"q": Noul("`photo` shows a gray square")})
+    body = server.requests[0]
+    refs = {body["state"]["photo"], *body["state"]["frames"]}
+    assert len(refs) == 2 and all(r.startswith("img-") for r in refs)  # the same picture twice is one asset
+    assert body["state"]["photo"] == body["state"]["frames"][1]
+    assets = body["assets"]
+    assert set(assets) == refs
+    png_asset = assets[body["state"]["photo"]]
+    assert png_asset == {"type": "image", "format": "png", "data_base64": base64.b64encode(png(300, 300)).decode()}
+    assert assets[body["state"]["frames"][0]]["format"] == "jpg"
+    assert not any("data:" in a["data_base64"] for a in assets.values())
+    assert _header(server, 0, "TypeSafe-Danger-Zone-Images") == "true"
+
+
+def test_typesafe_assets_header_for_box_only_and_never_for_text(server):
+    box = {"type": "box", "box": {"top": 0.1, "bottom": 0.4, "left": 0.2, "right": 0.6}, "confidence": 0.8}
+    server.handler = lambda body: {n: (box if q["type"] == "box" else {"type": "noul", "noul": 0.5}) for n, q in body["questions"].items()}
+    engine = Engine(SystemOne(server.url, model="jev-1.14.0", image_assets=True), cache=None)
+    engine.ask({"note": "text only"}, {"q": Noul("Is it?")})
+    engine.ask({"note": "a box asked about a picture in the question"}, {"where": Box("the mug")})
+    assert "assets" not in server.requests[0] and _header(server, 0, "TypeSafe-Danger-Zone-Images") is None
+    assert "assets" not in server.requests[1] and _header(server, 1, "TypeSafe-Danger-Zone-Images") == "true"
+
+
+def test_openrouter_mode_sends_image_parts_untouched(server):
+    server.handler = lambda body: {"q": {"type": "noul", "noul": 0.9}}
+    part = ex.image(png(300, 300))
+    Engine(SystemOne(server.url, model="typesafe/jev-1.14"), cache=None).ask({"photo": part}, {"q": Noul("Is it?")})
+    assert server.requests[0]["state"]["photo"] == part and "assets" not in server.requests[0]
+    assert _header(server, 0, "TypeSafe-Danger-Zone-Images") is None
+
+
+def test_typesafe_preset_turns_assets_on(monkeypatch, server):
+    monkeypatch.setenv("TYPESAFE_BASE_URL", server.url)
+    b = ex.typesafe(api_key="k")
+    assert b.image_assets is True and b.model == "jev-1.14.0"
+    assert ex.openrouter(api_key="k").image_assets is False
+    assert ex.typesafe(api_key="k", image_assets=False).image_assets is False
+
+
+def test_assets_refuse_a_picture_that_is_not_inline_png_or_jpeg(server):
+    engine = Engine(SystemOne(server.url, model="jev-1.14.0", image_assets=True), cache=None)
+    remote = {"type": "image_url", "image_url": {"url": "https://example.invalid/cat.png"}}
+    with pytest.raises(LimitError, match="PNG or JPEG"):
+        engine.ask({"photo": remote}, {"q": Noul("Is it a cat?")})
+    assert server.requests == []
+
+
+def test_semantic_programs_refuse_pictures_on_typesafe_assets(server):
+    from exregex.semantic.errors import UnsupportedCapability
+    from exregex.semantic.transport import NamedQuestion, prepare
+
+    backend = SystemOne(server.url, model="jev-1.14.0", image_assets=True)
+    state = json.dumps({"photo": ex.image(png(300, 300))}).encode()
+    with pytest.raises(UnsupportedCapability, match="assets"):
+        prepare(backend, state, (NamedQuestion("q", Noul("Is it?")),))

@@ -29,6 +29,7 @@ from typing import Any, Optional
 from ._types import Answer, BoxAnswer, ChoiceAnswer, Decision, NoulAnswer, Question, Refusal, Score, ScoreAnswer, parse_answer
 from ._version import __version__
 from .errors import BackendError, ConfigError, LimitError
+from .images import to_assets
 
 # Statuses worth another attempt: rate limits, overload (TypeSafe's 529), gateway hiccups
 # (OpenRouter returns 520 under load), and server errors. Anything else is a caller mistake.
@@ -94,10 +95,10 @@ class HTTPBackend(Backend):
         from .semantic.transport import parse_strict
         return parse_strict(response, request)
 
-    def _post(self, body: dict) -> tuple[dict, int, float]:
+    def _post(self, body: dict, extra_headers: Optional[Mapping[str, str]] = None) -> tuple[dict, int, float]:
         """POST with retries. Returns (json, retries used, latency of the final attempt in ms)."""
         data = json.dumps(body, ensure_ascii=False).encode("utf-8")
-        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT, **self._headers}
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT, **self._headers, **(extra_headers or {})}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
         attempt = 0
@@ -188,6 +189,11 @@ class SystemOne(HTTPBackend):
     `url` is the full endpoint (https://api.typesafe.ai/v1/systemone), or a server root, in
     which case /v1/systemone is added.
 
+    `image_assets=True` sends pictures the way TypeSafe's own API wants them: each image part from
+    exregex.image() becomes a reference string, the image goes in a top-level `assets` map, and
+    the request carries `TypeSafe-Danger-Zone-Images: true` whenever it has a picture or a Box
+    question. `typesafe()` turns it on; OpenRouter reads the image parts directly.
+
     `long_context=True` lets one request carry up to 600,000 characters (Jev's long-context
     window is 262,144 tokens; TypeSafe documents it as slower and less accurate than staying
     under 32k). It sends TypeSafe's `TypeSafe-Danger-Zone-Long-Context` header; OpenRouter
@@ -205,6 +211,7 @@ class SystemOne(HTTPBackend):
         max_questions: int = 32,
         max_state_chars: Optional[int] = None,
         long_context: bool = False,
+        image_assets: bool = False,
         **kwargs: Any,
     ):
         url = url.rstrip("/")
@@ -214,6 +221,7 @@ class SystemOne(HTTPBackend):
             kwargs["headers"] = {**dict(kwargs.get("headers") or {}), "TypeSafe-Danger-Zone-Long-Context": "true"}
         super().__init__(url, api_key=api_key, model=model, **kwargs)
         self.long_context = long_context
+        self.image_assets = image_assets
         self.name = name
         self.price_per_mtok = price_per_mtok if price_per_mtok is not None else 0.0
         self._semantic_price = price_per_mtok
@@ -221,8 +229,17 @@ class SystemOne(HTTPBackend):
         self.max_state_chars = max_state_chars or (600_000 if long_context else 60_000)
 
     def decide(self, state: Any, questions: Mapping[str, Question]) -> Decision:
-        body = {"model": self.model, "state": state, "questions": {k: q.to_wire() for k, q in questions.items()}}
-        payload, retries, latency = self._post(body)
+        wire = {k: q.to_wire() for k, q in questions.items()}
+        body: dict = {"model": self.model, "state": state, "questions": wire}
+        extra: dict[str, str] = {}
+        if self.image_assets:
+            assets: dict = {}
+            body["state"], body["questions"] = to_assets(state, assets), to_assets(wire, assets)
+            if assets:
+                body["assets"] = assets
+            if assets or any(w["type"] == "box" for w in wire.values()):
+                extra["TypeSafe-Danger-Zone-Images"] = "true"
+        payload, retries, latency = self._post(body, extra)
         if "answers" not in payload and isinstance(payload.get("result"), dict):
             payload = payload["result"]  # Cloudflare Workers AI wraps replies in {"result": ...}
         raw = payload.get("answers")
@@ -386,6 +403,7 @@ def typesafe(api_key: Optional[str] = None, *, model: str = "jev-1.14.0", **kwar
     if not key:
         raise ConfigError("typesafe: set TYPESAFE_API_KEY or pass api_key=")
     url = os.environ.get("TYPESAFE_BASE_URL", "https://api.typesafe.ai")
+    kwargs.setdefault("image_assets", True)
     return SystemOne(url, api_key=key, model=model, name="typesafe", price_per_mtok=0.042, **kwargs)
 
 
