@@ -14,11 +14,11 @@
     },
     {
       "title": "February 30",
-      "params": { "meaning": "a date that exists on the calendar", "text": "2025-02-30" }
+      "params": { "meaning": "a date that exists on the calendar, counting leap years", "text": "2025-02-30" }
     },
     {
       "title": "A leap day",
-      "params": { "meaning": "a date that exists on the calendar", "text": "2024-02-29" }
+      "params": { "meaning": "a date that exists on the calendar, counting leap years", "text": "2024-02-29" }
     },
     {
       "title": "Scunthorpe",
@@ -289,7 +289,7 @@
     {
       "title": "A date that exists",
       "params": {
-        "meaning": "a date that exists on the calendar",
+        "meaning": "a date that exists on the calendar, counting leap years",
         "regex": "\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])",
         "cases": [
           { "text": "2024-02-29", "truth": true },

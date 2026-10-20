@@ -48,6 +48,11 @@ console.log(`ready in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 const results = [];
 const check = (name, ok, detail = "") => { results.push([name, ok, detail]); console.log(`${ok ? "ok  " : "FAIL"} ${name}${detail ? "  " + detail : ""}`); };
 const resultText = () => page.locator("#result").innerText();
+
+// The header names the package the worker actually installed and the model the answers came from.
+const pinned = /^VERSION = "([^"]+)"/m.exec(readFileSync(path.join(here, "build.py"), "utf8"))[1];
+const versions = await page.locator("#versions").innerText();
+check("header: installed version and model", versions.includes(`ex-regex ${pinned}`) && /Jev \d+\.\d+/.test(versions), versions);
 const settle = async () => {
   await page.waitForFunction(() => {
     const r = document.querySelector("#result");

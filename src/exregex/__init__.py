@@ -8,7 +8,7 @@
 
 Decisions come from a System One model (TypeSafe's Jev by default) as typed answers with
 probabilities. ex-regex finds candidate spans, asks, and hands back verbatim spans with offsets.
-See the README for backends, costs, and where a regex is still the right tool.
+See docs/ in the repository for backends, costs, and where a regex is still the right tool.
 """
 
 from ._types import (

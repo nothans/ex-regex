@@ -259,7 +259,7 @@ class OpenAIDecisions(HTTPBackend):
     The shapes differ from System One: questions are a list with a `name`, a yes/no is a
     `predicate`, choices are `{value, description}`, levels are `{label, description}`, the
     state goes in `input` as text, and an answer may be a `refusal`. This class translates.
-    Built from OpenAI's published guide; see the README for what has been run live.
+    Built from OpenAI's published guide; see docs/backends.md for what has been run live.
     """
 
     name = "openai"

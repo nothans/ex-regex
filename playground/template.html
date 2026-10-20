@@ -91,6 +91,8 @@ a { color: var(--accent-ink); }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 17px; letter-spacing: -0.01em; }
 .brand svg { width: 26px; height: 26px; }
 .brand small { font-weight: 500; color: var(--ink-3); font-size: 13px; }
+.versions { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.versions b { font-weight: 600; color: var(--ink-2); }
 .top .spacer { flex: 1; }
 .engine-pill {
   display: inline-flex; align-items: center; gap: 8px;
@@ -327,8 +329,10 @@ dialog p { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
   nav.stations button { width: auto; white-space: nowrap; }
   nav.stations button code { display: none; }
   main { padding: 20px 16px 48px; }
-  .top { padding: 10px 16px; gap: 10px; }
+  .top { padding: 10px 16px; gap: 4px 10px; flex-wrap: wrap; }
   .top a.ext { display: none; }
+  .brand, .engine-pill { white-space: nowrap; }
+  .versions { order: 1; flex-basis: 100%; }
 }
 </style>
 </head>
@@ -338,6 +342,7 @@ dialog p { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
     <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12 5H6v22h6" fill="none" stroke="currentColor" stroke-width="4"/><path d="M20 5h4c0 7-5 7-5 11s5 4 5 11h-4" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/></svg>
     <span>ex-regex <small>playground</small></span>
   </div>
+  <span class="versions" id="versions"></span>
   <span class="spacer"></span>
   <button class="engine-pill" id="engine-pill" type="button" data-mode="recorded" title="Where the answers come from">
     <span class="dot"></span><span id="engine-label">Starting Python</span>
@@ -375,6 +380,8 @@ dialog p { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
 "use strict";
 const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
 const PACKAGE = "ex-regex==__VERSION__";
+// The Jev model live questions go to. The recorded answers name their own model in the lockfile.
+const JEV_MODEL = "typesafe/jev-1.14";
 const PRESETS = __PRESETS_JSON__;
 const PLAYGROUND_PY = __PLAYGROUND_PY__;
 const DECISIONS = __DECISIONS__;
@@ -392,7 +399,7 @@ import playground
 
 LOCK = "/home/pyodide/decisions.jsonl"
 URL = "https://openrouter.ai/api/alpha/decisions"
-MODEL = "typesafe/jev-1.13"
+MODEL = "${JEV_MODEL}"
 
 
 class SystemOne(backends.SystemOne):
@@ -1311,8 +1318,21 @@ boot.listeners.push(() => {
   else if (state.station === "engine") renderEngine();
 });
 
+// "typesafe/jev-1.14-20261014" -> "Jev 1.14"
+const jevName = (model) => { const m = /jev-(\d+\.\d+)/.exec(model || ""); return m ? "Jev " + m[1] : model || "Jev"; };
+const RECORDED_MODELS = [...new Set(DECISIONS.split("\n").filter(Boolean).map((l) => JSON.parse(l).model).filter(Boolean))];
+function refreshVersions() {
+  const pkg = boot.ready ? boot.version : PACKAGE.split("==")[1];
+  const models = liveMode ? [JEV_MODEL] : RECORDED_MODELS;
+  const el = $("#versions");
+  el.innerHTML = `<b>ex-regex ${esc(pkg)}</b> · ${esc([...new Set(models.map(jevName))].join(", "))}`;
+  el.title = `ex-regex ${pkg}${boot.ready ? ", installed from PyPI" : ", installing"}${boot.pyVersion ? ", Python " + boot.pyVersion : ""}\n`
+    + (liveMode ? "Live questions go to " + JEV_MODEL : "Recorded answers from " + models.join(", "));
+}
+
 let liveMode = false;
 async function refreshEnginePill() {
+  refreshVersions();
   const pill = $("#engine-pill"), label = $("#engine-label");
   if (boot.error) { label.textContent = "Python did not start"; return; }
   if (!boot.ready) { label.textContent = "Starting Python"; return; }

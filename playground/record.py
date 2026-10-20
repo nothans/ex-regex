@@ -21,7 +21,7 @@ sys.path.insert(0, str(HERE))
 import exregex as ex  # noqa: E402
 import playground  # noqa: E402
 
-MODEL = "typesafe/jev-1.13"
+MODEL = "typesafe/jev-1.14"
 
 
 def main() -> int:
