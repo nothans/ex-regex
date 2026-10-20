@@ -137,11 +137,14 @@ def _short(instructions: Any, n: int = 160) -> str:
     return text if len(text) <= n else text[: n - 1] + "…"
 
 
+KEY_VERSION = 2  # 2 (0.2.0a2): the key keeps the order the request is sent in; 1 sorted it away
+
+
 class Cache:
     """In-memory LRU, optionally backed by a file. Thread-safe.
 
     A path ending in .jsonl is a decision lockfile: one readable JSON line per decision, append
-    only, sorted keys, every entry kept. Commit it next to your code and diff it in review; with
+    only, every entry kept, each tagged with the key version it was recorded under. Commit it next to your code and diff it in review; with
     Engine(replay=True) your tests run from it and never touch the network. Any other path is a
     SQLite file, better for large private caches.
     """
@@ -153,6 +156,7 @@ class Cache:
         self._db: Optional[sqlite3.Connection] = None
         self._lockfile: Optional[Path] = None
         self._pinned: dict[str, dict] = {}
+        self.legacy_rows = 0  # lockfile rows recorded under an older key version, which never match
         self._path: Optional[Path] = None
         self._read_only = read_only
         if path is not None and str(path).endswith(".jsonl"):
@@ -164,6 +168,8 @@ class Cache:
                     try:
                         row = json.loads(line)
                         self._pinned[row["key"]] = {"model": row["model"], "answers": row["answers"]}
+                        if row.get("key_version") != KEY_VERSION:
+                            self.legacy_rows += 1
                     except (ValueError, KeyError, TypeError):
                         raise ValueError(f"{self._lockfile}:{n}: not a decision lockfile line") from None
         elif path is not None:
@@ -182,15 +188,22 @@ class Cache:
 
     @staticmethod
     def key(backend: Backend, state: Any, questions: Mapping[str, Question]) -> str:
+        """The decision's identity: backend, model, and the request in the order it is sent.
+
+        Order is part of the question. The model reads a choice's options, and the state's
+        fields, in the order they arrive, and Jev leans toward early options; two orderings are
+        two decisions. (Key version 1 sorted keys, so a lockfile could replay an answer recorded
+        for another order.)
+        """
         blob = json.dumps(
             [
+                f"exregex-key-{KEY_VERSION}",
                 type(backend).__name__,
                 getattr(backend, "url", backend.name),
                 backend.model,
                 state,
                 {k: v.to_wire() for k, v in questions.items()},
             ],
-            sort_keys=True,
             ensure_ascii=False,
             default=str,
         )
@@ -225,7 +238,7 @@ class Cache:
             if self._lockfile is not None:
                 if key not in self._pinned:
                     self._pinned[key] = value
-                    row = {"key": key, **value, **(about or {})}
+                    row = {"key": key, "key_version": KEY_VERSION, **value, **(about or {})}
                     self._lockfile.parent.mkdir(parents=True, exist_ok=True)
                     with self._lockfile.open("a", encoding="utf-8") as f:
                         f.write(json.dumps(row, sort_keys=True, ensure_ascii=False) + "\n")
@@ -376,9 +389,16 @@ class Engine:
                     self.stats.cached += 1
                 return Decision({k: parse_answer(v) for k, v in hit["answers"].items()}, hit["model"], cached=True)
         if self.replay:
+            legacy = getattr(self.cache, "legacy_rows", 0)
+            hint = (
+                f" This lockfile has {legacy} row(s) recorded before ex-regex 0.2.0a2, whose keys ignored the order of "
+                "options and fields; those rows never match now. Re-record the lockfile once without replay."
+                if legacy
+                else ""
+            )
             raise CacheMiss(
                 "replay mode: this decision is not recorded. Re-run once without replay to record it "
-                f"({len(questions)} question(s), model {self.backend.model})"
+                f"({len(questions)} question(s), model {self.backend.model}).{hint}"
             )
         decision = self._send(state, questions)
         answers = dict(decision.answers)

@@ -240,6 +240,8 @@ In Python it is `ex.diff(meaning, regex, text, unit="line")`.
 Point the cache at a `.jsonl` file and every decision is recorded as one readable line: the question asked, the model, the answers.
 Commit it, diff it in review, and run CI with `--replay` or `Engine(replay=True)`.
 Replay never touches the network and needs no API key, and a decision that was not recorded raises `CacheMiss` instead of calling out.
+A decision's identity is the request as sent, including the order of a choice's options, because the model reads them in order.
+Lockfiles recorded before 0.2.0a2 ignored that order and need one re-record; replay says so when it meets one.
 
 ```bash
 exregex diff "..." '...' tickets.txt --cache decisions.jsonl            # record once, with a key

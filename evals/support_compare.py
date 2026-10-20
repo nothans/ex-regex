@@ -55,6 +55,12 @@ def hashed(value):
     return hashlib.sha256(data(value)).hexdigest()
 
 
+# File and folder names use a prefix of the digest: two full 64-character digests under a temp
+# directory passed Windows' 260-character path limit. 24 hex characters (96 bits) keep collisions
+# out of reach for a recording; records still carry the full digest, and replay checks the body.
+NAME = 24
+
+
 def load_lines(path):
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
@@ -121,7 +127,9 @@ class DirectCalls:
         prepared = self.backend.prepare(data(state), questions)
         caps = prepared.capabilities
         ident = hashed([asdict(caps), prepared.body.hex()])
-        path = self.directory / f"{ident}.json"
+        path = self.directory / f"{ident[:NAME]}.json"
+        if self.replay and not path.exists() and (self.directory / f"{ident}.json").exists():
+            path = self.directory / f"{ident}.json"  # recorded before the short names
         estimated_tokens = len(prepared.body) + 32 * len(questions)
         if caps.price_per_mtok is None or caps.output_price_per_mtok != 0:
             raise ValueError("baseline requires explicit input price and free outputs")
@@ -407,7 +415,9 @@ def main():
         spent = 0.0
         output = args.output / f"{arm}.jsonl"
         for item in items:
-            case_root = cache_root / arm / hashed(item["id"])
+            case_root = cache_root / arm / hashed(item["id"])[:NAME]
+            if args.mode == "replay" and not case_root.exists() and (cache_root / arm / hashed(item["id"])).exists():
+                case_root = cache_root / arm / hashed(item["id"])  # recorded before the short names
             remaining = max(0.0, args.budget - spent)
             calls = DirectCalls(backend, case_root, replay=args.mode == "replay", budget=remaining, concurrency=config["concurrency"])
             meter.peak = 0

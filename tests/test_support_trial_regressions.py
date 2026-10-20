@@ -416,6 +416,33 @@ def test_cli_cold_isolation_readonly_replay_and_scripted_provenance(tmp_path, mo
     assert refused.value.code == 2 and "Scripted" in capsys.readouterr().err
 
 
+def test_recordings_use_short_names_and_old_long_names_still_replay(tmp_path, monkeypatch):
+    """Two full 64-character digests under a temp directory passed Windows' 260-character path
+    limit; names are now 24-character prefixes, and a recording made with full names replays."""
+    import re
+
+    dataset, first, replay = tmp_path / "data", tmp_path / "first", tmp_path / "replay"
+    items = duplicate_dataset(dataset)
+    invoke_compare(monkeypatch, dataset, first)
+    recorded = sorted((first / "observations").rglob("*.json"))
+    assert recorded and all(len(p.stem) == compare.NAME and len(p.parent.name) == compare.NAME for p in recorded)
+    # Rewrite the direct arm into the layout that 0.2.0a1 wrote: full digests for folders and files.
+    full = set(re.findall(r"[0-9a-f]{64}", (first / "direct.jsonl").read_text(encoding="utf-8")))
+    full |= {compare.hashed(item["id"]) for item in items}
+    for folder in list((first / "observations" / "direct").iterdir()):
+        long_folder = folder.with_name(next(h for h in full if h.startswith(folder.name)))
+        folder.rename(long_folder)
+        for f in list(long_folder.iterdir()):
+            f.rename(f.with_name(next(h for h in full if h.startswith(f.stem)) + ".json"))
+    invoke_compare(monkeypatch, dataset, replay, "--mode", "replay", "--replay-from", str(first))
+    for arm in ("direct", "compiled"):
+        results = compare.load_lines(replay / (arm + ".jsonl"))
+        cold = compare.load_lines(first / (arm + ".jsonl"))
+        assert all(r["complete"] for r in results)
+        assert [r["matches"] for r in results] == [r["matches"] for r in cold]
+        assert [r["stats"]["cached"] for r in results] == [5, 5]
+
+
 @pytest.mark.parametrize("charge", ["reported", "unknown"])
 def test_cli_arm_budget_continues_across_case_engines(tmp_path, monkeypatch, charge):
     from dataclasses import replace
