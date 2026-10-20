@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
 from ._types import (
     Answer,
+    Box,
+    BoxAnswer,
     Choice,
     ChoiceAnswer,
     Decision,
@@ -47,17 +49,40 @@ from .backends import Backend, from_env, identity_from_env
 from .errors import BackendError, BudgetExceeded, CacheMiss, LimitError
 
 BYTES_PER_TOKEN = 3.0  # conservative: English runs about 4 bytes a token, CJK about 3
+IMAGE_TOKENS = 8_000  # a 0.74-megapixel photo billed 2,408 tokens; the largest image Jev takes is 2.46 megapixels
 MISSING_RETRIES = 2  # re-ask questions a server skipped in a packed request
 
 
 def estimate_tokens(state: Any, questions: Mapping[str, Question]) -> int:
-    """A deliberately high estimate. UTF-8 bytes, not characters: a CJK character is about one token."""
+    """A deliberately high estimate. UTF-8 bytes, not characters: a CJK character is about one token.
+
+    An image is billed by its pixels, not its base64 length, so each one counts as IMAGE_TOKENS.
+    """
+    images = 0
+    if not isinstance(state, str):
+        state, images = _without_images(state)
     text = state if isinstance(state, str) else json.dumps(state, ensure_ascii=False)
     q = json.dumps({k: v.to_wire() for k, v in questions.items()}, ensure_ascii=False)
-    return int((len(text.encode("utf-8")) + len(q.encode("utf-8"))) / BYTES_PER_TOKEN) + 8 * len(questions)
+    return int((len(text.encode("utf-8")) + len(q.encode("utf-8"))) / BYTES_PER_TOKEN) + 8 * len(questions) + IMAGE_TOKENS * images
 
 
-_EXPECTED = {Noul: NoulAnswer, Choice: ChoiceAnswer, Score: ScoreAnswer}
+def _without_images(value: Any) -> tuple[Any, int]:
+    """The state with each image part replaced by a placeholder, and how many there were."""
+    if isinstance(value, Mapping):
+        if value.get("type") == "image_url":
+            return "[image]", 1
+        out, n = {}, 0
+        for k, v in value.items():
+            out[k], m = _without_images(v)
+            n += m
+        return out, n
+    if isinstance(value, (list, tuple)):
+        items = [_without_images(v) for v in value]
+        return [v for v, _ in items], sum(m for _, m in items)
+    return value, 0
+
+
+_EXPECTED = {Noul: NoulAnswer, Choice: ChoiceAnswer, Score: ScoreAnswer, Box: BoxAnswer}
 
 
 def check_answers(questions: Mapping[str, Question], answers: Mapping[str, Answer]) -> None:

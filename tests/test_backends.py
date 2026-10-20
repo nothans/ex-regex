@@ -157,10 +157,10 @@ def test_from_env_prefers_typesafe_then_openrouter(monkeypatch):
     with pytest.raises(ConfigError, match="OPENROUTER_API_KEY"):
         from_env()
     monkeypatch.setenv("OPENROUTER_API_KEY", "or")
-    assert from_env().name == "openrouter" and from_env().model == "typesafe/jev-1.13"
+    assert from_env().name == "openrouter" and from_env().model == "typesafe/jev-1.14"
     monkeypatch.setenv("TYPESAFE_API_KEY", "ts")
     b = from_env()
-    assert b.name == "typesafe" and b.model == "jev-1.13.0" and b.url == "https://api.typesafe.ai/v1/systemone"
+    assert b.name == "typesafe" and b.model == "jev-1.14.0" and b.url == "https://api.typesafe.ai/v1/systemone"
 
 
 def test_from_env_explicit_choice_and_url(monkeypatch):

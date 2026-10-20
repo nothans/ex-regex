@@ -6,6 +6,7 @@ three types, and each comes back as a typed answer with probabilities:
     Noul    yes or no             -> NoulAnswer.p, the probability of yes
     Choice  pick one of 2-255      -> ChoiceAnswer.choice, .probabilities, .confidence
     Score   place on 2-10 levels   -> ScoreAnswer.score, .probabilities, .confidence
+    Box     where in an image      -> BoxAnswer.left, .top, .right, .bottom, .confidence
 
 The limits are checked here, before a request costs anything.
 """
@@ -91,7 +92,22 @@ class Score:
         return {"type": "score", "instructions": self.instructions, "criteria": list(self.criteria)}
 
 
-Question = Union[Noul, Choice, Score]
+@dataclass(frozen=True)
+class Box:
+    """Where something is in an image in the state (see exregex.image). Needs a model that
+    answers Box (Jev 1.14). There is no "not found": a Box always returns a box, so ask a Noul
+    beside it when the target might be absent."""
+
+    instructions: Any
+
+    def __post_init__(self) -> None:
+        _check_instructions(self.instructions)
+
+    def to_wire(self) -> dict:
+        return {"type": "box", "instructions": self.instructions}
+
+
+Question = Union[Noul, Choice, Score, Box]
 
 
 @dataclass(frozen=True)
@@ -129,6 +145,37 @@ class ScoreAnswer:
 
 
 @dataclass(frozen=True)
+class BoxAnswer:
+    """Four edges as fractions of the image, measured from its top-left corner."""
+
+    left: float
+    top: float
+    right: float
+    bottom: float
+    confidence: float
+    type: str = field(default="box", init=False)
+
+    @property
+    def area(self) -> float:
+        """The fraction of the image the box covers."""
+        return (self.right - self.left) * (self.bottom - self.top)
+
+    def pixels(self, width: int, height: int) -> tuple[int, int, int, int]:
+        """(left, top, right, bottom) in pixels, ready for a crop."""
+        return (round(self.left * width), round(self.top * height), round(self.right * width), round(self.bottom * height))
+
+    def pad(self, fraction: float) -> BoxAnswer:
+        """The box grown by `fraction` of the image on every side, kept inside the image."""
+        return BoxAnswer(
+            max(0.0, self.left - fraction),
+            max(0.0, self.top - fraction),
+            min(1.0, self.right + fraction),
+            min(1.0, self.bottom + fraction),
+            self.confidence,
+        )
+
+
+@dataclass(frozen=True)
 class Refusal:
     """A backend declined to answer this question (OpenAI's Decisions API can)."""
 
@@ -136,7 +183,7 @@ class Refusal:
     type: str = field(default="refusal", init=False)
 
 
-Answer = Union[NoulAnswer, ChoiceAnswer, ScoreAnswer, Refusal]
+Answer = Union[NoulAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, Refusal]
 
 
 def _prob(value: Any, what: str) -> float:
@@ -182,6 +229,14 @@ def parse_answer(raw: Any) -> Answer:
         except ValueError:
             raise BackendError(f"malformed answer: score levels {raw.get('probabilities')!r}") from None
         return ScoreAnswer(_real(raw.get("score"), "score"), levels, _prob(raw.get("confidence", 0.0), "confidence"), legend)
+    if kind == "box":
+        edges = raw.get("box")
+        if not isinstance(edges, Mapping):
+            raise BackendError(f"malformed answer: a box without edges {raw!r}")
+        left, top, right, bottom = (_prob(edges.get(k), f"box {k}") for k in ("left", "top", "right", "bottom"))
+        if left > right or top > bottom:
+            raise BackendError(f"malformed answer: box edges cross {dict(edges)!r}")
+        return BoxAnswer(left, top, right, bottom, _prob(raw.get("confidence", 0.0), "confidence"))
     if kind == "refusal":
         return Refusal(raw.get("reason") or raw.get("refusal"))
     raise BackendError(f"unknown answer type {kind!r}")
@@ -205,6 +260,12 @@ def answer_to_wire(answer: Answer) -> dict:
             "probabilities": {str(k): v for k, v in answer.probabilities.items()},
             "confidence": answer.confidence,
             "legend": {str(k): v for k, v in answer.legend.items()},
+        }
+    if isinstance(answer, BoxAnswer):
+        return {
+            "type": "box",
+            "box": {"left": answer.left, "top": answer.top, "right": answer.right, "bottom": answer.bottom},
+            "confidence": answer.confidence,
         }
     return {"type": "refusal", "reason": answer.reason}
 

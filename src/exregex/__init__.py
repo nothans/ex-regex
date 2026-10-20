@@ -13,6 +13,8 @@ See the README for backends, costs, and where a regex is still the right tool.
 
 from ._types import (
     Answer,
+    Box,
+    BoxAnswer,
     Choice,
     ChoiceAnswer,
     Decision,
@@ -27,6 +29,7 @@ from ._version import __version__
 from .backends import Backend, OpenAIDecisions, Scripted, SystemOne, from_env, local, openai, openrouter, typesafe
 from .engine import Engine, Stats, get_engine, set_engine
 from .errors import BackendError, BudgetExceeded, CacheMiss, ConfigError, ExRegexError, LimitError, RefusedError
+from .images import image, image_size
 from .patterns import (
     Diff,
     Match,
@@ -115,6 +118,10 @@ __all__ = [
     "Noul",
     "Choice",
     "Score",
+    "Box",
+    "BoxAnswer",
+    "image",
+    "image_size",
     "Question",
     "Answer",
     "NoulAnswer",

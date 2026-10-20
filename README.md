@@ -196,6 +196,7 @@ All 24 personal-contact spans were redacted with exact boundaries.
 Contact recall requires every character of the labeled span to be covered; exact boundaries and false positives are reported separately.
 The full two-wording evaluation took **33.3 seconds, 114 requests, and $0.0025** from cold, with zero cache hits, on 2026-10-08.
 [Full results](https://github.com/nothans/ex-regex/blob/main/evals/results/report-2026-10-08-openrouter-typesafe_jev-1.13.md).
+Re-run on Jev 1.14 (the default since 0.2.0a1) on 2026-10-19, every number in the table came out the same: [1.14 results](https://github.com/nothans/ex-regex/blob/main/evals/results/report-2026-10-19-openrouter-typesafe_jev-1.14.md).
 
 These are small development sets with authored labels, not a blind benchmark or independently reviewed human data.
 Measure your own data before trusting a threshold.
@@ -346,7 +347,7 @@ import exregex as ex
 from exregex import Engine, openrouter
 
 engine = Engine(
-    openrouter(model="typesafe/jev-1.13"),   # pinned: thresholds tuned on one model do not move
+    openrouter(model="typesafe/jev-1.14"),   # pinned: thresholds tuned on one model do not move
     cache="~/.cache/myapp/decisions.sqlite",  # recorded answers keyed by model, state, and questions
     max_cost_usd=0.50,                       # refuse any request that would pass this
     concurrency=8,                           # requests in flight, shared by every caller of this engine
@@ -374,12 +375,47 @@ More worked examples:
 - [`examples/claim_check.py`](https://github.com/nothans/ex-regex/blob/main/examples/claim_check.py) finds the unsourced claims in a Markdown draft by asking three narrow questions per sentence: is it a checkable fact, does it say where the fact came from, and is it the writer's own result.
 - A commit hook: `git log -1 --format=%B | exregex test "the commit message describes a breaking change to a public API" -q && echo "bump the major version"`.
 
+## Pictures, boxes, and long texts (Jev 1.14)
+
+Jev 1.14 reads pictures, answers a fourth question type, `Box`, and reads up to 262,144 tokens in one request.
+TypeSafe labels pictures and Box "Dreamer-ready": fine for prototypes, and the format and limits can change.
+
+```python
+import exregex as ex
+
+engine = ex.Engine(ex.openrouter())   # Jev 1.14, the default since 0.2.0a1
+photo = ex.image("board.png")   # PNG or JPEG, 280-1,568 px a side, checked before sending
+a = engine.ask({"photo": photo}, {
+    "there": ex.Noul("`photo` shows the MATRIX logo"),
+    "where": ex.Box("the MATRIX logo in `photo`"),
+})
+a["where"]                        # BoxAnswer(left=0.62, top=0.4, right=0.86, bottom=0.51, confidence=0.87)
+a["where"].pixels(748, 993)       # (464, 397, 643, 506), ready for a crop
+```
+
+- **A Box always returns a box.** There is no "not found", so ask a `Noul` beside it.
+- **One picture per request.** Packed together, pictures leak into each other's answers.
+- **A loose box gets tighter on a second look.** Crop to `a["where"].pad(0.08)`, enlarge, and ask again.
+- **Pictures go through OpenRouter.** `ex.image()` builds the Chat Completions image part OpenRouter reads; TypeSafe's own API takes pictures in a separate `assets` map that ex-regex does not build yet.
+
+Long texts need no new call.
+`long_context=True` on any preset raises the 60,000-character limit to 600,000 and sends TypeSafe's long-context header (OpenRouter switches modes by size without it), so a whole book can be one `test`:
+
+```python
+book = open("aesop.txt").read()   # 313 fables, 200,000 characters
+ex.test("a fox fails to reach something and then says it was not worth having", book, unit="text",
+        engine=ex.Engine(ex.openrouter(long_context=True)))
+```
+
+In a live check on 2026-10-19, one planted sentence in 168,000 characters scored 0.97, the same text without it 0.01, and a near miss 0.04.
+TypeSafe documents long context as slower and less accurate than staying under 32k tokens, so prefer packing short spans when you can.
+
 ## Backends
 
 | Backend | How | Status |
 |---|---|---|
 | Jev via OpenRouter | `OPENROUTER_API_KEY`, or `openrouter()` | run live for everything above |
-| Jev from TypeSafe | `TYPESAFE_API_KEY`, or `typesafe()` (pinned `jev-1.13.0`) | same System One shape; not yet run live from here |
+| Jev from TypeSafe | `TYPESAFE_API_KEY`, or `typesafe()` (pinned `jev-1.14.0`) | same System One shape; not yet run live from here |
 | An open model on your machine | `EXREGEX_BACKEND=http://127.0.0.1:8000` with `EXREGEX_MODEL=...`, or `local(url, model=...)` | any `/v1/systemone` server: Kev, Laya, razorback16/openjev; not yet run live from here |
 | Cloudflare Clef | `SystemOne("https://api.cloudflare.com/client/v4/accounts/<id>/ai/run/@cf/cloudflare/clef", api_key=..., model="clef")` | Clef follows the System One API; the reply wrapper is handled; not yet run live |
 | OpenAI Decisions API | `OPENAI_API_KEY` with `EXREGEX_BACKEND=openai`, or `openai()` | public beta since 2026-10-06; translated to and from System One per OpenAI's guide and tested against that shape offline; not yet run live |
@@ -458,7 +494,7 @@ Two more limits worth knowing:
 
 ## Before you ship it
 
-- **Pin the model.** The presets already do (`typesafe/jev-1.13`, `jev-1.13.0`). An alias like `jev-latest` can move under thresholds you measured.
+- **Pin the model.** The presets already do (`typesafe/jev-1.14`, `jev-1.14.0` since 0.2.0a1; pass `model=` for 1.13). An alias like `jev-latest` can move under thresholds you measured.
 - **Measure on your own labels.** Fifty examples per pattern is enough to see the misses and choose a threshold.
 - **Decide what the review band does.** Probabilities between 0.1 and 0.9 are where the model is unsure. Send them to a person, a second wording, or a stricter rule, instead of rounding them.
 - **Record a lockfile for your tests**, and run CI with `replay=True`.
@@ -467,6 +503,7 @@ Two more limits worth knowing:
 ## Limits
 
 - **Request size.** Jev takes up to 32k tokens of state plus the longest question, 64k in total. ex-regex packs requests to about 60,000 characters and raises `LimitError` with a hint when one span is too large to judge, for example one huge paragraph.
+With `long_context=True` the limit is 600,000 characters (see [Pictures, boxes, and long texts](#pictures-boxes-and-long-texts-jev-114)).
 - **Choice options.** A choice question takes at most 255 options, so `search` and `extract` window long inputs.
 - **Accuracy.** Jev's documented weak spots are literal reading, numbers, date comparison, double negatives, irrelevant state, and a slight lean toward the first option (see the [jaggedness page](https://docs.typesafe.ai/model-jaggedness/jev-1.13.md)).
 - **Cost.** Jev bills $0.042 per million input tokens through OpenRouter or TypeSafe, and output is free. ex-regex packs many spans into one request to keep the state from repeating.

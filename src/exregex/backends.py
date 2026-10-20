@@ -26,9 +26,9 @@ import urllib.request
 from collections.abc import Callable, Mapping
 from typing import Any, Optional
 
-from ._types import Answer, ChoiceAnswer, Decision, NoulAnswer, Question, Refusal, Score, ScoreAnswer, parse_answer
+from ._types import Answer, BoxAnswer, ChoiceAnswer, Decision, NoulAnswer, Question, Refusal, Score, ScoreAnswer, parse_answer
 from ._version import __version__
-from .errors import BackendError, ConfigError
+from .errors import BackendError, ConfigError, LimitError
 
 # Statuses worth another attempt: rate limits, overload (TypeSafe's 529), gateway hiccups
 # (OpenRouter returns 520 under load), and server errors. Anything else is a caller mistake.
@@ -187,6 +187,11 @@ class SystemOne(HTTPBackend):
 
     `url` is the full endpoint (https://api.typesafe.ai/v1/systemone), or a server root, in
     which case /v1/systemone is added.
+
+    `long_context=True` lets one request carry up to 600,000 characters (Jev's long-context
+    window is 262,144 tokens; TypeSafe documents it as slower and less accurate than staying
+    under 32k). It sends TypeSafe's `TypeSafe-Danger-Zone-Long-Context` header; OpenRouter
+    switches modes by size on its own, so there the setting only lifts ex-regex's own limit.
     """
 
     def __init__(
@@ -198,18 +203,22 @@ class SystemOne(HTTPBackend):
         name: str = "systemone",
         price_per_mtok: Optional[float] = None,
         max_questions: int = 32,
-        max_state_chars: int = 60_000,
+        max_state_chars: Optional[int] = None,
+        long_context: bool = False,
         **kwargs: Any,
     ):
         url = url.rstrip("/")
         if not (url.endswith("/systemone") or url.endswith("/decisions") or "/ai/run/" in url):
             url += "/v1/systemone"
+        if long_context:
+            kwargs["headers"] = {**dict(kwargs.get("headers") or {}), "TypeSafe-Danger-Zone-Long-Context": "true"}
         super().__init__(url, api_key=api_key, model=model, **kwargs)
+        self.long_context = long_context
         self.name = name
         self.price_per_mtok = price_per_mtok if price_per_mtok is not None else 0.0
         self._semantic_price = price_per_mtok
         self.max_questions = max_questions
-        self.max_state_chars = max_state_chars
+        self.max_state_chars = max_state_chars or (600_000 if long_context else 60_000)
 
     def decide(self, state: Any, questions: Mapping[str, Question]) -> Decision:
         body = {"model": self.model, "state": state, "questions": {k: q.to_wire() for k, q in questions.items()}}
@@ -260,6 +269,8 @@ class OpenAIDecisions(HTTPBackend):
             if crit:
                 text += "".join(f"\n{k.capitalize()} means: {v}" for k, v in crit.items())
             return {"type": "predicate", "name": name, "instructions": text}
+        if wire["type"] == "box":
+            raise LimitError("openai: the Decisions API has no Box question; use Jev 1.14 (openrouter(model='typesafe/jev-1.14'))")
         if wire["type"] == "choice":
             choices = [{"value": k, "description": v if isinstance(v, str) and v else k} for k, v in wire["criteria"].items()]
             return {"type": "choice", "name": name, "instructions": text, "choices": choices}
@@ -360,7 +371,7 @@ class Scripted(Backend):
                 a = NoulAnswer(float(a))
             elif isinstance(a, Mapping):
                 a = parse_answer(a)
-            if not isinstance(a, (NoulAnswer, ChoiceAnswer, ScoreAnswer, Refusal)):
+            if not isinstance(a, (NoulAnswer, ChoiceAnswer, ScoreAnswer, BoxAnswer, Refusal)):
                 raise BackendError(f"scripted: {name!r} is not an answer: {a!r}")
             answers[name] = a
         return Decision(answers, self.model)
@@ -369,8 +380,8 @@ class Scripted(Backend):
 # ------------------------------------------------------------------ presets
 
 
-def typesafe(api_key: Optional[str] = None, *, model: str = "jev-1.13.0", **kwargs: Any) -> SystemOne:
-    """TypeSafe directly. Model pinned to jev-1.13.0: thresholds tuned on one model do not move."""
+def typesafe(api_key: Optional[str] = None, *, model: str = "jev-1.14.0", **kwargs: Any) -> SystemOne:
+    """TypeSafe directly. Model pinned to jev-1.14.0: thresholds tuned on one model do not move."""
     key = api_key or os.environ.get("TYPESAFE_API_KEY")
     if not key:
         raise ConfigError("typesafe: set TYPESAFE_API_KEY or pass api_key=")
@@ -378,8 +389,12 @@ def typesafe(api_key: Optional[str] = None, *, model: str = "jev-1.13.0", **kwar
     return SystemOne(url, api_key=key, model=model, name="typesafe", price_per_mtok=0.042, **kwargs)
 
 
-def openrouter(api_key: Optional[str] = None, *, model: str = "typesafe/jev-1.13", **kwargs: Any) -> SystemOne:
-    """Jev through OpenRouter's Decisions endpoint. No TypeSafe account needed."""
+def openrouter(api_key: Optional[str] = None, *, model: str = "typesafe/jev-1.14", **kwargs: Any) -> SystemOne:
+    """Jev through OpenRouter's Decisions endpoint. No TypeSafe account needed.
+
+    Pinned to Jev 1.14, which answers Box questions; pass `model="typesafe/jev-1.13"` to stay on
+    1.13. The ex-regex evaluation gave identical results on both (2026-10-19).
+    """
     key = api_key or os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise ConfigError("openrouter: set OPENROUTER_API_KEY or pass api_key=")
